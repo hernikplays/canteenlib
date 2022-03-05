@@ -125,9 +125,9 @@ class Canteen {
             RegExp(
                 r'[a-zA-ZěščřžýáíéÉÍÁÝŽŘČŠĚŤŇťň.,:]  [a-zA-ZěščřžýáíéÉÍÁÝŽŘČŠĚŤŇťň.,:]'),
             ''); // odstraní dvojté mezery mezi písmeny
-        var cislo = RegExp(r'(?<=<span style="color: #1b75bb;">).+?(?=<)')
+        var vydejna = RegExp(r'(?<=<span style="color: #1b75bb;">).+?(?=<)')
             .firstMatch(s); // název výdejny / verze 2.18
-        cislo ??= RegExp(
+        vydejna ??= RegExp(
                 r'(?<=<span class="smallBoldTitle" style="color: #1b75bb;">).+?(?=<)')
             .firstMatch(s); // název výdejny / verze 2.10
         File("dva.txt").writeAsStringSync(s);
@@ -140,7 +140,7 @@ class Canteen {
         jidla.add(Jidlo(
             nazev: hlavni,
             objednano: false,
-            cislo: cislo!.group(0).toString(),
+            cislo: vydejna!.group(0).toString(),
             lzeObjednat: false));
       }
       jidelnicek.add(Jidelnicek(den, jidla));
@@ -183,7 +183,7 @@ class Canteen {
           .toString()
           .split(" / ");
       var vydejna = RegExp(
-              r'(?<=<span class="smallBoldTitle" style="color: #1b75bb;">).+?(?=<)')
+              r'(?<=<span class="smallBoldTitle button-link-align">).+?(?=<)')
           .firstMatch(o)!
           .group(0)
           .toString();
@@ -210,6 +210,7 @@ class Canteen {
   }
 
   Future<bool> objednat(Jidlo j) async {
+    //TODO
     if (!j.lzeObjednat || j.orderUrl == null || j.orderUrl!.isEmpty) {
       return false;
     }
