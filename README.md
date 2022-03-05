@@ -7,4 +7,4 @@ Experimentální **neoficiální** webscrape knihovna pro komunikaci se systéme
 *\* Knihovna nemusí fungovat na všech instancích systému iCanteen, proto žádám každého, kdo může a je uživatelem iCanteen, aby otestoval funkčnost této knihovny a případné problémy [nahlásil](https://github.com/hernikplays/canteenlib/issues)*
 
 ### Otestované instance iCanteen
-[zde]()
+[zde](https://github.com/hernikplays/canteenlib/blob/main/COMPATIBILITY.md)
