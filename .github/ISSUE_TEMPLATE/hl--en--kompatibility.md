@@ -2,7 +2,7 @@
 name: Hlášení kompatibility
 about: Pokud chcete nahlásit výsledky vašeho testu kompatibility, použijte tuto předlohu
 title: 'Kompatibilita: '
-labels: ''
+labels: kompatibilita
 assignees: hernikplays
 
 ---
