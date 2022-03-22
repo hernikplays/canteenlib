@@ -14,11 +14,14 @@ class Jidlo {
 
   ///Lze objednat?
   bool lzeObjednat;
+
+  DateTime den;
   final String? orderUrl;
   Jidlo(
       {required this.nazev,
       required this.objednano,
       required this.cislo,
+      required this.den,
       this.cena,
       required this.lzeObjednat,
       this.orderUrl});

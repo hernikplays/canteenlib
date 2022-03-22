@@ -12,7 +12,27 @@ import 'jidlo.dart';
 class Canteen {
   final String url;
   Map<String, String> cookies = {"JSESSIONID": "", "XSRF-TOKEN": ""};
+  double _kredit = 0.0;
+  bool prihlasen = false;
   Canteen(this.url);
+
+  /// Vrátí aktuální kredit ze serveru jako [double]. Jelikož je async, nejdřív [Future]
+  ///
+  /// Nastane-li chyba, vrací [Null]
+  Future<double> ziskejKredit() async {
+    if (!prihlasen) return 0.0;
+    var r = await _getRequest("/faces/secured/main.jsp");
+    if (r == null) return 0.0;
+    File("./test.txt").writeAsStringSync(r);
+    var m = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
+        .firstMatch(r)!
+        .group(1)!
+        .replaceAll(",", ".")
+        .replaceAll(RegExp(r"[^\w.]"), ""));
+    if (m == null) return 0.0;
+    _kredit = m;
+    return _kredit;
+  }
 
   Future<void> getFirstSession() async {
     var res = await http.get(Uri.parse(url));
@@ -36,8 +56,9 @@ class Canteen {
   /// `user` - uživatelské jméno
   /// `password` - heslo
   ///
+  /// Vrátí `true`, když se uživatel přihlásil, jinak `false`
   /// TODO: Házet chyby
-  Future<void> login(String user, String password) async {
+  Future<bool> login(String user, String password) async {
     if (cookies["JSESSIONID"] == "" || cookies["XSRF-TOKEN"] == "") {
       await getFirstSession();
     }
@@ -59,11 +80,17 @@ class Canteen {
       "targetUrl":
           "/faces/secured/main.jsp?terminal=false&status=true&printer=&keyboard="
     });
+    if (res.headers['set-cookie']!.contains("remember-me=;")) {
+      return false; // špatné heslo
+    }
+
     _parseCookies(res.headers['set-cookie']!);
     if (res.statusCode != 302) {
       print(res.body);
       print("ERROR");
     }
+    prihlasen = true;
+    return true;
   }
 
   /// Builder pro GET request
@@ -128,9 +155,9 @@ class Canteen {
         var vydejna = RegExp(r'(?<=<span style="color: #1b75bb;">).+?(?=<)')
             .firstMatch(s); // název výdejny / verze 2.18
         vydejna ??= RegExp(
+                // TODO: Lepší systém pro podporu různých verzí iCanteen
                 r'(?<=<span class="smallBoldTitle" style="color: #1b75bb;">).+?(?=<)')
             .firstMatch(s); // název výdejny / verze 2.10
-        File("dva.txt").writeAsStringSync(s);
         var hlavni = RegExp(
                 r' {20}(([a-zA-ZěščřžýáíéÉÍÁÝŽŘČŠĚŤŇťň.,:\/]+ )+[a-zA-ZěščřžýáíéÉÍÁÝŽŘČŠĚŤŇťň.,:\/]+)',
                 dotAll: true)
@@ -141,7 +168,8 @@ class Canteen {
             nazev: hlavni,
             objednano: false,
             cislo: vydejna!.group(0).toString(),
-            lzeObjednat: false));
+            lzeObjednat: false,
+            den: den));
       }
       jidelnicek.add(Jidelnicek(den, jidla));
     }
@@ -150,11 +178,17 @@ class Canteen {
 
   /// Získá jídlo pro daný den
   /// Vyžaduje přihlášení pomocí [login]
-  Future<Jidelnicek> jidelnicekDen() async {
+  /// Aktuálně pouze dnešní den
+  Future<Jidelnicek> jidelnicekDen({DateTime? den}) async {
+    den ??= DateTime.now();
     var res = await _getRequest(
-        "/faces/secured/main.jsp?terminal=false&android=false&keyboard=false&printer=false");
-    var den = DateTime.parse(RegExp(r'(?<=day-).+?(?=")', dotAll: true)
-        .firstMatch(res!)!
+        "/faces/secured/main.jsp?day=${den.year}-${(den.month < 10) ? "0" + den.month.toString() : den.month}-${(den.day < 10) ? "0" + den.day.toString() : den.day}&terminal=false&printer=false&keyboard=false");
+    if (res!.contains("<title>iCanteen - přihlášení uživatele</title>")) {
+      prihlasen = false;
+      throw Exception("Nepřihlášen");
+    }
+    var obedDen = DateTime.parse(RegExp(r'(?<=day-).+?(?=")', dotAll: true)
+        .firstMatch(res)!
         .group(0)
         .toString());
     var jidla = <Jidlo>[];
@@ -173,6 +207,8 @@ class Canteen {
           !(o.contains("nelze zrušit") || o.contains("nelze objednat"));
       var cenaMatch =
           RegExp(r'(?<=Cena objednaného jídla">).+?(?=&)').firstMatch(o);
+      cenaMatch ??=
+          RegExp(r'(?<=Cena při objednání jídla:&nbsp;).+?(?=&)').firstMatch(o);
       cenaMatch ??=
           RegExp(r'(?<=Cena při objednání jídla">).+?(?=&)').firstMatch(o);
       var cena =
@@ -202,20 +238,46 @@ class Canteen {
           cislo: vydejna,
           lzeObjednat: lzeObjednat,
           cena: cena,
-          orderUrl: orderUrl));
+          orderUrl: orderUrl,
+          den: obedDen));
       // KONEC formátování do třídy
     }
 
-    return Jidelnicek(den, jidla);
+    return Jidelnicek(obedDen, jidla);
   }
 
-  Future<bool> objednat(Jidlo j) async {
+  /// Objedná vybrané jídlo
+  /// Vrátí upravenou instanci [Jidlo], v případě chyby vrací originální
+  Future<Jidlo> objednat(Jidlo j) async {
     //TODO
     if (!j.lzeObjednat || j.orderUrl == null || j.orderUrl!.isEmpty) {
-      return false;
+      return j;
     }
-    var res = await _getRequest(j.orderUrl!);
-    print(res);
-    return true;
+    var res =
+        await _getRequest("/faces/secured/" + j.orderUrl!); // provést operaci
+    if (res == null || res.contains("Chyba")) return j;
+
+    var novy = await _getRequest(
+        "/faces/secured/db/dbJidelnicekOnDayView.jsp?day=${j.den.year}-${(j.den.month < 10) ? "0" + j.den.month.toString() : j.den.month}-${(j.den.day < 10) ? "0" + j.den.day.toString() : j.den.day}&terminal=false&rating=null&printer=false&keyboard=false"); // získat novou URL pro objednávání
+    if (novy == null) return j;
+    var lzeObjednat =
+        !(novy.contains("nelze zrušit") || novy.contains("nelze objednat"));
+    String orderUrl = "";
+    if (lzeObjednat) {
+      // pokud lze objednat, nastavíme adresu pro objednání
+      orderUrl = RegExp(r"(?<=ajaxOrder\(this, ').+?(?=')")
+          .firstMatch(novy)!
+          .group(0)!
+          .replaceAll("amp;", "");
+    }
+
+    return Jidlo(
+        cislo: j.cislo,
+        nazev: j.nazev,
+        objednano: !j.objednano,
+        cena: j.cena,
+        lzeObjednat: j.lzeObjednat,
+        orderUrl: orderUrl,
+        den: j.den); // vrátit upravenou instanci
   }
 }
