@@ -18,7 +18,7 @@ class Canteen {
 
   /// Vrátí aktuální kredit ze serveru jako [double]. Jelikož je async, nejdřív [Future]
   ///
-  /// Nastane-li chyba, vrací [Null]
+  /// Nastane-li chyba, vrací 0
   Future<double> ziskejKredit() async {
     if (!prihlasen) return 0.0;
     var r = await _getRequest("/faces/secured/main.jsp");
@@ -224,12 +224,20 @@ class Canteen {
           .group(0)
           .toString();
       String? orderUrl;
+      String? burzaUrl;
       if (lzeObjednat) {
         // pokud lze objednat, nastavíme adresu pro objednání
-        orderUrl = RegExp(r"(?<=ajaxOrder\(this, ').+?(?=')")
-            .firstMatch(o)!
-            .group(0)!
-            .replaceAll("amp;", "");
+        var match = RegExp(r"(?<=ajaxOrder\(this, ').+?(?=')").firstMatch(o);
+        if (match != null) {
+          orderUrl = match.group(0)!.replaceAll("amp;", "");
+        }
+      } else {
+        // jinak nastavíme URL pro burzu
+        var match = RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?do burzy")
+            .firstMatch(o);
+        if (match != null) {
+          burzaUrl = match.group(1)!.replaceAll("amp;", "");
+        }
       }
       jidla.add(Jidlo(
           nazev: jidlaProDen[1]
@@ -262,13 +270,22 @@ class Canteen {
     if (novy == null) return j;
     var lzeObjednat =
         !(novy.contains("nelze zrušit") || novy.contains("nelze objednat"));
-    String orderUrl = "";
+    String? orderUrl;
+    String? burzaUrl;
+
     if (lzeObjednat) {
       // pokud lze objednat, nastavíme adresu pro objednání
-      orderUrl = RegExp(r"(?<=ajaxOrder\(this, ').+?(?=')")
-          .firstMatch(novy)!
-          .group(0)!
-          .replaceAll("amp;", "");
+      var match = RegExp(r"(?<=ajaxOrder\(this, ').+?(?=')").firstMatch(novy);
+      if (match != null) {
+        orderUrl = match.group(0)!.replaceAll("amp;", "");
+      }
+    } else {
+      // jinak nastavíme URL pro burzu
+      var match = RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?do burzy")
+          .firstMatch(novy);
+      if (match != null) {
+        burzaUrl = match.group(1)!.replaceAll("amp;", "");
+      }
     }
 
     return Jidlo(
@@ -278,6 +295,49 @@ class Canteen {
         cena: j.cena,
         lzeObjednat: j.lzeObjednat,
         orderUrl: orderUrl,
-        den: j.den); // vrátit upravenou instanci
+        den: j.den,
+        burzaUrl: burzaUrl); // vrátit upravenou instanci
+  }
+
+  Future<Jidlo> doBurzy(Jidlo j) async {
+    //TODO
+    if (j.burzaUrl == null || j.burzaUrl!.isEmpty) {
+      return j;
+    }
+    var res =
+        await _getRequest("/faces/secured/" + j.burzaUrl!); // provést operaci
+    if (res == null || res.contains("Chyba")) return j;
+    var novy = await _getRequest(
+        "/faces/secured/db/dbJidelnicekOnDayView.jsp?day=${j.den.year}-${(j.den.month < 10) ? "0" + j.den.month.toString() : j.den.month}-${(j.den.day < 10) ? "0" + j.den.day.toString() : j.den.day}&terminal=false&rating=null&printer=false&keyboard=false"); // získat novou URL pro objednávání
+    if (novy == null) return j;
+    var lzeObjednat =
+        !(novy.contains("nelze zrušit") || novy.contains("nelze objednat"));
+    String? orderUrl;
+    String? burzaUrl;
+
+    if (lzeObjednat) {
+      // pokud lze objednat, nastavíme adresu pro objednání
+      var match = RegExp(r"(?<=ajaxOrder\(this, ').+?(?=')").firstMatch(novy);
+      if (match != null) {
+        orderUrl = match.group(0)!.replaceAll("amp;", "");
+      }
+    } else {
+      // jinak nastavíme URL pro burzu
+      var match = RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?do burzy")
+          .firstMatch(novy);
+      if (match != null) {
+        burzaUrl = match.group(1)!.replaceAll("amp;", "");
+      }
+    }
+
+    return Jidlo(
+        cislo: j.cislo,
+        nazev: j.nazev,
+        objednano: !j.objednano,
+        cena: j.cena,
+        lzeObjednat: j.lzeObjednat,
+        orderUrl: orderUrl,
+        den: j.den,
+        burzaUrl: burzaUrl); // vrátit upravenou instanci
   }
 }

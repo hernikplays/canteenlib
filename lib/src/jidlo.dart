@@ -15,8 +15,14 @@ class Jidlo {
   ///Lze objednat?
   bool lzeObjednat;
 
+  /// Den, který je jídlo vydáváno
   DateTime den;
+
+  /// URL pro požadavek na objednání jídla
   final String? orderUrl;
+
+  /// URL pro vložení jídla na burzu
+  final String? burzaUrl;
   Jidlo(
       {required this.nazev,
       required this.objednano,
@@ -24,7 +30,8 @@ class Jidlo {
       required this.den,
       this.cena,
       required this.lzeObjednat,
-      this.orderUrl});
+      this.orderUrl,
+      this.burzaUrl});
 }
 
 /// Reprezentuje jídelníček pro jeden dan
