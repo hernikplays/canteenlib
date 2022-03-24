@@ -6,10 +6,6 @@ version: 0.1.0-alpha
 environment:
   sdk: '>=2.16.1 <3.0.0'
 
-
-# dependencies:
-#   path: ^1.8.0
-
 dev_dependencies:
   dotenv: ^3.0.0
   lints: ^1.0.0
