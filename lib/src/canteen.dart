@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import 'jidlo.dart';
+import 'tridy.dart';
 
 /*
  MIT License
@@ -28,31 +28,52 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 class Canteen {
-  final String url;
+  String url;
   Map<String, String> cookies = {"JSESSIONID": "", "XSRF-TOKEN": ""};
-  double _kredit = 0.0;
   bool prihlasen = false;
   Canteen(this.url);
 
-  /// Vrátí aktuální kredit ze serveru jako [double]. Jelikož je async, nejdřív [Future]
-  ///
-  /// Nastane-li chyba, vrací 0
-  Future<double> ziskejKredit() async {
-    if (!prihlasen) return 0.0;
-    var r = await _getRequest("/faces/secured/main.jsp");
-    if (r == null) return 0.0;
-    File("./test.txt").writeAsStringSync(r);
+  /// Vrátí informace o uživateli ve formě instance [Uzivatel]
+  Future<Uzivatel> ziskejUzivatele() async {
+    if (!prihlasen) throw Exception("Bez přihlášení");
+    var r = await _getRequest("/web/setting");
+    if (r == null) throw Exception("Při požadavku došlo k chybě");
     var m = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
         .firstMatch(r)!
         .group(1)!
         .replaceAll(",", ".")
         .replaceAll(RegExp(r"[^\w.]"), ""));
-    if (m == null) return 0.0;
-    _kredit = m;
-    return _kredit;
+    var jmenoMatch = RegExp(r'(?<=jméno: <b>).+?(?=<\/b)').firstMatch(r);
+    var prijmeniMatch = RegExp(r'(?<=příjmení: <b>).+?(?=<\/b)').firstMatch(r);
+    var kategorieMatch =
+        RegExp(r'(?<=kategorie: <b>).+?(?=<\/b)').firstMatch(r);
+    var ucetMatch = RegExp(r'(?<=účet pro platby do jídelny: <b>).+?(?=<\/b)')
+        .firstMatch(r);
+    var varMatch =
+        RegExp(r'(?<=variabilní symbol: <b>).+?(?=<\/b)').firstMatch(r);
+    var specMatch =
+        RegExp(r'(?<=specifický symbol: <b>).+?(?=<\/b)').firstMatch(r);
+
+    var jmeno = jmenoMatch?.group(0) ?? "";
+    var prijmeni = prijmeniMatch?.group(0) ?? "";
+    var kategorie = kategorieMatch?.group(0) ?? "";
+    var ucet = ucetMatch?.group(0) ?? "";
+    var varSymbol = varMatch?.group(0) ?? "";
+    var specSymbol = specMatch?.group(0) ?? "";
+
+    return Uzivatel(
+        jmeno: jmeno,
+        prijmeni: prijmeni,
+        kategorie: kategorie,
+        ucetProPlatby: ucet,
+        varSymbol: varSymbol,
+        specSymbol: specSymbol,
+        kredit: m ?? 0.0);
   }
 
   Future<void> getFirstSession() async {
+    if (url.endsWith("/"))
+      url = url.substring(0, url.length - 1); // odstranit lomítko
     var res = await http.get(Uri.parse(url));
     _parseCookies(res.headers['set-cookie']!);
   }
@@ -74,8 +95,8 @@ class Canteen {
   /// `user` - uživatelské jméno
   /// `password` - heslo
   ///
-  /// Vrátí `true`, když se uživatel přihlásil, jinak `false`
-  /// TODO: Házet chyby
+  /// Vrátí `true`, když se uživatel přihlásil, v případě špatného hesla `false`
+  /// V případě chyby na serveru vyhodí [Exception]
   Future<bool> login(String user, String password) async {
     if (cookies["JSESSIONID"] == "" || cookies["XSRF-TOKEN"] == "") {
       await getFirstSession();
@@ -101,17 +122,17 @@ class Canteen {
     if (res.headers['set-cookie']!.contains("remember-me=;")) {
       return false; // špatné heslo
     }
-
-    _parseCookies(res.headers['set-cookie']!);
     if (res.statusCode != 302) {
-      print(res.body);
-      print("ERROR");
+      throw Exception("Chyba: ${res.body}");
     }
+    _parseCookies(res.headers['set-cookie']!);
+
     prihlasen = true;
     return true;
   }
 
   /// Builder pro GET request
+  /// V případě chyby na serveru (divný status kód) vyhodí [Exception]
   Future<String?> _getRequest(String path) async {
     var r = await http.get(Uri.parse(url + path), headers: {
       "Cookie": "JSESSIONID=" +
@@ -123,6 +144,9 @@ class Canteen {
               ? "; " + cookies["remember-me"]! + ";"
               : ";"),
     });
+    if (r.statusCode != 302) {
+      throw Exception("Chyba: ${r.body}");
+    }
     if (r.headers.containsKey("set-cookie")) {
       _parseCookies(r.headers["set-cookie"]!);
     }
@@ -197,7 +221,6 @@ class Canteen {
 
   /// Získá jídlo pro daný den
   /// Vyžaduje přihlášení pomocí [login]
-  /// Aktuálně pouze dnešní den
   Future<Jidelnicek> jidelnicekDen({DateTime? den}) async {
     den ??= DateTime.now();
     var res = await _getRequest(
@@ -279,7 +302,6 @@ class Canteen {
   /// Objedná vybrané jídlo
   /// Vrátí upravenou instanci [Jidlo], v případě chyby vrací originální
   Future<Jidlo> objednat(Jidlo j) async {
-    //TODO
     if (!j.lzeObjednat || j.orderUrl == null || j.orderUrl!.isEmpty) {
       return j;
     }
@@ -324,6 +346,9 @@ class Canteen {
             : !burzaUrl.contains("plusburza")); // vrátit upravenou instanci
   }
 
+  /// Uloží jídlo z/do burzy
+  ///
+  /// Vrací upravenou instanci [Jidlo], v případě chyby vrací originální
   Future<Jidlo> doBurzy(Jidlo j) async {
     if (j.burzaUrl == null || j.burzaUrl!.isEmpty) {
       return j;

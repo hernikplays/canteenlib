@@ -4,7 +4,7 @@ void main(List<String> args) {
   Canteen c = Canteen("https://kantyna.neco.cz");
   c.login("uzivatel", "heslo").then((value) {
     c.jidelnicekDen(den: DateTime.parse("2022-04-04")).then((t) async {
-      print(await c.ziskejKredit());
+      print((await c.ziskejUzivatele()).kredit);
       c.objednat(t.jidla[0]).then(
         (value) {
           t.jidla[0] = value; // divně udělané ale nic lepšího teď nevymyslím

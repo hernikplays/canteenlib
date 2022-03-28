@@ -2,4 +2,4 @@
 library canteenlib;
 
 export 'src/canteen.dart';
-export 'src/jidlo.dart';
+export 'src/tridy.dart';
