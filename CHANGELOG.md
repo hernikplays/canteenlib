@@ -1,3 +1,6 @@
+## 0.1.0-alpha.3
+- Kontrolovat správný status kód u GET požadavků
+
 ## 0.1.0-alpha.2
 - Nevytvářet debugovací soubor
 - Místo ziskejKredit používáme ziskejUzivatele (Třída Uzivatel)

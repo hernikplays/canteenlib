@@ -122,6 +122,7 @@ class Canteen {
     if (res.headers['set-cookie']!.contains("remember-me=;")) {
       return false; // špatné heslo
     }
+    print(res.statusCode);
     if (res.statusCode != 302) {
       throw Exception("Chyba: ${res.body}");
     }
@@ -144,7 +145,7 @@ class Canteen {
               ? "; " + cookies["remember-me"]! + ";"
               : ";"),
     });
-    if (r.statusCode != 302) {
+    if (r.statusCode != 200) {
       throw Exception("Chyba: ${r.body}");
     }
     if (r.headers.containsKey("set-cookie")) {
