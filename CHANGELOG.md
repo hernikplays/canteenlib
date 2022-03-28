@@ -1,3 +1,6 @@
+## 0.1.0-alpha.1
+- Aktualizace licence
+
 ## 0.1.0-alpha
 
 - Funkční přihlášení

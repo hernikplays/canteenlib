@@ -1,6 +1,6 @@
 name: canteenlib
 description: Knihovna pro komunikaci se stravovacím systémem iCanteen
-version: 0.1.0-alpha
+version: 0.1.0-alpha.1
 repository: 'https://github.com/hernikplays/canteenlib'
 issue_tracker: 'https://github.com/hernikplays/canteenlib/issues'
 
