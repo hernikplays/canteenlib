@@ -5,6 +5,12 @@ Experimentální **neoficiální** webscrape knihovna pro komunikaci se systéme
 
 ## Funkční funkce(*)
 - získání jídelníčku na aktuální den (s cenami)
+- Objednání / zrušení objednávek
+- Nabídnutí jídla do burzy / zrušení
+
+## To do
+- Získání a objednání cizího jídla z burzy
+- Kompatibilita se staršími verzemi iCanteen
 
 *\* Knihovna nemusí fungovat na všech instancích systému iCanteen, proto žádám každého, kdo může a je uživatelem iCanteen, aby otestoval funkčnost této knihovny a případné problémy [nahlásil](https://github.com/hernikplays/canteenlib/issues)*
 

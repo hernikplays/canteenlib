@@ -1,4 +1,6 @@
 ## 0.1.0-alpha
 
-- První verze, funkčnost omezená
-- Metody pro zobrazení jídelníčku
+- Funkční přihlášení
+- Funkční zobrazení jídelníčku
+- Funkční objednávání jídel z jídelníčku
+- Funkční zobrazení kreditu

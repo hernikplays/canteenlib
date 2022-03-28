@@ -15,6 +15,9 @@ class Jidlo {
   ///Lze objednat?
   bool lzeObjednat;
 
+  /// Je jídlo aktuálně na burze?
+  bool naBurze;
+
   /// Den, který je jídlo vydáváno
   DateTime den;
 
@@ -31,7 +34,8 @@ class Jidlo {
       this.cena,
       required this.lzeObjednat,
       this.orderUrl,
-      this.burzaUrl});
+      this.burzaUrl,
+      required this.naBurze});
 }
 
 /// Reprezentuje jídelníček pro jeden dan

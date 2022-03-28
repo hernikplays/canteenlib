@@ -169,7 +169,8 @@ class Canteen {
             objednano: false,
             cislo: vydejna!.group(0).toString(),
             lzeObjednat: false,
-            den: den));
+            den: den,
+            naBurze: false));
       }
       jidelnicek.add(Jidelnicek(den, jidla));
     }
@@ -247,7 +248,10 @@ class Canteen {
           lzeObjednat: lzeObjednat,
           cena: cena,
           orderUrl: orderUrl,
-          den: obedDen));
+          den: obedDen,
+          burzaUrl: burzaUrl,
+          naBurze:
+              (burzaUrl == null) ? false : !burzaUrl.contains("plusburza")));
       // KONEC formátování do třídy
     }
 
@@ -296,11 +300,13 @@ class Canteen {
         lzeObjednat: j.lzeObjednat,
         orderUrl: orderUrl,
         den: j.den,
-        burzaUrl: burzaUrl); // vrátit upravenou instanci
+        burzaUrl: burzaUrl,
+        naBurze: (burzaUrl == null)
+            ? false
+            : !burzaUrl.contains("plusburza")); // vrátit upravenou instanci
   }
 
   Future<Jidlo> doBurzy(Jidlo j) async {
-    //TODO
     if (j.burzaUrl == null || j.burzaUrl!.isEmpty) {
       return j;
     }
@@ -338,6 +344,9 @@ class Canteen {
         lzeObjednat: j.lzeObjednat,
         orderUrl: orderUrl,
         den: j.den,
-        burzaUrl: burzaUrl); // vrátit upravenou instanci
+        burzaUrl: burzaUrl,
+        naBurze: (burzaUrl == null)
+            ? false
+            : !burzaUrl.contains("plusburza")); // vrátit upravenou instanci
   }
 }

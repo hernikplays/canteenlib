@@ -1,10 +1,17 @@
 import 'package:canteenlib/canteenlib.dart';
 
-void main() {
-  var canteen = Canteen("http://icanteen.vasedomena.neco");
-  canteen.login("user", "password").then((_) {
-    canteen.jidelnicekDen().then((jidelnicek) {
-      print(jidelnicek.jidla[0].nazev);
+void main(List<String> args) {
+  Canteen c = Canteen("https://kantyna.neco.cz");
+  c.login("uzivatel", "heslo").then((value) {
+    c.jidelnicekDen(den: DateTime.parse("2022-04-04")).then((t) async {
+      print(await c.ziskejKredit());
+      c.objednat(t.jidla[0]).then(
+        (value) {
+          t.jidla[0] = value; // divně udělané ale nic lepšího teď nevymyslím
+          print(t.jidla[0].objednano);
+          print(t.jidla[0].orderUrl);
+        },
+      );
     });
   });
 }
