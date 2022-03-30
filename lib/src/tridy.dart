@@ -38,6 +38,7 @@ class Jidlo {
       required this.naBurze});
 }
 
+/// Reprezentuje cizí jídlo na burze
 class Burza {
   /// Den, který je jídlo vydáváno
   DateTime den;
@@ -62,7 +63,7 @@ class Burza {
       this.varianta});
 }
 
-/// Reprezentuje jídelníček pro jeden dan
+/// Reprezentuje jídelníček pro jeden den
 class Jidelnicek {
   /// Den, pro který je jídelníček zveřejněn
   DateTime den;
@@ -80,7 +81,7 @@ class Uzivatel {
   /// Jméno, jak je uvedené v základních údajích o uživateli
   String? jmeno;
 
-  /// příjmení, jak je uvedené v základních údajích o uživateli
+  /// Příjmení, jak je uvedené v základních údajích o uživateli
   String? prijmeni;
 
   /// Kategorie uživatele

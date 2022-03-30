@@ -28,16 +28,15 @@ SOFTWARE.
 
 /// Reprezentuje kantýnu
 ///
-/// `url` - adresa kantýny
-///
-/// `cookies` - sušenky potřebné pro komunikaci
-///
-/// `prihlasen` - je uživatel přihlášen?
-///
 /// **Všechny metody v případě chyby vrací [Future] s chybovou hláškou.**
 class Canteen {
+  /// Adresa kantýny
   String url;
+
+  /// Sušenky potřebné pro komunikaci
   Map<String, String> cookies = {"JSESSIONID": "", "XSRF-TOKEN": ""};
+
+  /// Je uživatel přihlášen?
   bool prihlasen = false;
   Canteen(this.url);
 
@@ -46,6 +45,7 @@ class Canteen {
     if (!prihlasen) return Future.error("Uživatel není přihlášen");
     var r = await _getRequest("/web/setting");
     if (r.contains("přihlášení uživatele")) {
+      prihlasen = false;
       return Future.error("Uživatel není přihlášen");
     }
     var m = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
@@ -81,7 +81,7 @@ class Canteen {
         kredit: m ?? 0.0);
   }
 
-  Future<void> getFirstSession() async {
+  Future<void> _getFirstSession() async {
     if (url.endsWith("/")) {
       url = url.substring(0, url.length - 1);
     } // odstranit lomítko
@@ -103,13 +103,16 @@ class Canteen {
 
   /// Přihlášení do iCanteen
   ///
-  /// `user` - uživatelské jméno
-  /// `password` - heslo
+  /// Vstup:
   ///
-  /// Vrátí `true`, když se uživatel přihlásil, v případě špatného hesla `false`
+  /// - `user` - uživatelské jméno | [String]
+  /// - `password` - heslo | [String]
+  ///
+  /// Výstup:
+  /// - [bool] ve [Future], v případě přihlášení `true`, v případě špatného hesla `false`
   Future<bool> login(String user, String password) async {
     if (cookies["JSESSIONID"] == "" || cookies["XSRF-TOKEN"] == "") {
-      await getFirstSession();
+      await _getFirstSession();
     }
     var res =
         await http.post(Uri.parse(url + "/j_spring_security_check"), headers: {
@@ -164,7 +167,11 @@ class Canteen {
   }
 
   /// Získá jídelníček bez cen
-  /// **nevrací** ceny, ale umožňuje získat jídelníček bez přihlášení
+  ///
+  /// Výstup:
+  /// - [List] s [Jidelnicek], který neobsahuje ceny
+  ///
+  /// __Lze použít bez přihlášení__
   Future<List<Jidelnicek>> ziskejJidelnicek() async {
     var res = await _getRequest("/");
     var reg = RegExp(
@@ -230,7 +237,14 @@ class Canteen {
   }
 
   /// Získá jídlo pro daný den
-  /// Vyžaduje přihlášení pomocí [login]
+  ///
+  /// __Vyžaduje přihlášení pomocí [login]__
+  ///
+  /// Vstup:
+  /// - `den` - *volitelné*, určuje pro jaký den chceme získat jídelníček | [DateTime]
+  ///
+  /// Výstup:
+  /// - [Jidelnicek] obsahující detaily, které vidí přihlášený uživatel
   Future<Jidelnicek> jidelnicekDen({DateTime? den}) async {
     if (!prihlasen) {
       return Future.error("Uživatel není přihlášen");
@@ -314,7 +328,11 @@ class Canteen {
 
   /// Objedná vybrané jídlo
   ///
-  /// Vrátí upravenou instanci [Jidlo], v případě chyby vrátí chybový [Future]
+  /// Vstup:
+  /// - `j` - Jídlo, které chceme objednat | [Jidlo]
+  ///
+  /// Výstup:
+  /// - Upravená instance [Jidlo] tohoto jídla
   Future<Jidlo> objednat(Jidlo j) async {
     if (!prihlasen) {
       return Future.error("Uživatel není přihlášen");
@@ -371,7 +389,11 @@ class Canteen {
 
   /// Uloží vaše jídlo z/do burzy
   ///
-  /// Vrací upravenou instanci [Jidlo], v případě chyby vrátí chybový [Future]
+  /// Vstup:
+  /// - `j` - Jídlo, které chceme dát/vzít do/z burzy | [Jidlo]
+  ///
+  /// Výstup:
+  /// - Upravená instance [Jidlo] tohoto jídla
   Future<Jidlo> doBurzy(Jidlo j) async {
     if (!prihlasen) {
       return Future.error("Uživatel není přihlášen");
@@ -426,7 +448,8 @@ class Canteen {
 
   /// Získá aktuální jídla v burze
   ///
-  /// Vrátí [Burza], v případě chyby vrátí chybový [Future]
+  /// Výstup:
+  /// - List instancí [Burza], každá obsahuje informace o jídle v burze
   Future<List<Burza>> ziskatBurzu() async {
     if (!prihlasen) return Future.error("Uživatel není přihlášen");
     List<Burza> burza = [];
@@ -475,7 +498,11 @@ class Canteen {
 
   /// Objedná jídlo z burzy pomocí URL z instance třídy Burza
   ///
-  /// Vrací [bool] - true pokud se podařilo objednat, jinak false
+  /// Vstup:
+  /// - `b` - Jídlo __z burzy__, které chceme objednat | [Burza]
+  ///
+  /// Výstup:
+  /// - [bool], `true`, pokud bylo jídlo úspěšně objednáno z burzy, jinak `false`
   Future<bool> objednatZBurzy(Burza b) async {
     var res = await _getRequest("/faces/secured/" + b.url!);
     if (res.contains("Chyba")) return false;
