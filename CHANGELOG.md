@@ -2,6 +2,7 @@
 - Nastavovat `prihlasen` na `false` v případě chyby i u `ziskejUzivatele`
 - Vylepšení dokumentace
 - `getFirstSession` je nyní soukromá metoda
+[Všechny změny](https://github.com/hernikplays/canteenlib/compare/0.1.0-alpha.6...0.1.0-alpha.7)
 
 ## 0.1.0-alpha.6
 - `return` místo `throw`
