@@ -6,8 +6,8 @@ class Jidlo {
   /// Objednal si uživatel toto jídlo?
   bool objednano;
 
-  /// Název výdejny
-  String cislo;
+  /// Název varianty
+  String varianta;
 
   /// Cena
   double? cena;
@@ -29,13 +29,37 @@ class Jidlo {
   Jidlo(
       {required this.nazev,
       required this.objednano,
-      required this.cislo,
+      required this.varianta,
       required this.den,
       this.cena,
       required this.lzeObjednat,
       this.orderUrl,
       this.burzaUrl,
       required this.naBurze});
+}
+
+class Burza {
+  /// Den, který je jídlo vydáváno
+  DateTime den;
+
+  /// URL pro objednání
+  final String? url;
+
+  /// Název jídla
+  String jidlo;
+
+  /// Varianta
+  String? varianta;
+
+  /// Počet kusů tohoto jídla dostupného na burze
+  int pocet;
+
+  Burza(
+      {required this.den,
+      required this.url,
+      required this.jidlo,
+      required this.pocet,
+      this.varianta});
 }
 
 /// Reprezentuje jídelníček pro jeden dan

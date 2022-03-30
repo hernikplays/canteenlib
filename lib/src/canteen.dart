@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:http/http.dart' as http;
 
 import 'tridy.dart';
@@ -35,9 +33,11 @@ class Canteen {
 
   /// Vrátí informace o uživateli ve formě instance [Uzivatel]
   Future<Uzivatel> ziskejUzivatele() async {
-    if (!prihlasen) throw Exception("Bez přihlášení");
+    if (!prihlasen) throw Exception("Uživatel není přihlášený");
     var r = await _getRequest("/web/setting");
-    if (r == null) throw Exception("Při požadavku došlo k chybě");
+    if (r.contains("přihlášení uživatele")) {
+      throw Exception("Uživatel není přihlášený");
+    }
     var m = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
         .firstMatch(r)!
         .group(1)!
@@ -72,8 +72,9 @@ class Canteen {
   }
 
   Future<void> getFirstSession() async {
-    if (url.endsWith("/"))
-      url = url.substring(0, url.length - 1); // odstranit lomítko
+    if (url.endsWith("/")) {
+      url = url.substring(0, url.length - 1);
+    } // odstranit lomítko
     var res = await http.get(Uri.parse(url));
     _parseCookies(res.headers['set-cookie']!);
   }
@@ -134,7 +135,7 @@ class Canteen {
 
   /// Builder pro GET request
   /// V případě chyby na serveru (divný status kód) vyhodí [Exception]
-  Future<String?> _getRequest(String path) async {
+  Future<String> _getRequest(String path) async {
     var r = await http.get(Uri.parse(url + path), headers: {
       "Cookie": "JSESSIONID=" +
           cookies["JSESSIONID"]! +
@@ -161,7 +162,7 @@ class Canteen {
     var reg = RegExp(
             r'((?=<div class="jidelnicekDen">).+?(?=<div class="jidelnicekDen">))|((?=<div class="jidelnicekDen">).*<\/span>)',
             dotAll: true)
-        .allMatches(res!)
+        .allMatches(res)
         .toList();
     List<Jidelnicek> jidelnicek = [];
     for (var t in reg) {
@@ -210,7 +211,7 @@ class Canteen {
         jidla.add(Jidlo(
             nazev: hlavni,
             objednano: false,
-            cislo: vydejna!.group(0).toString(),
+            varianta: vydejna!.group(0).toString(),
             lzeObjednat: false,
             den: den,
             naBurze: false));
@@ -223,10 +224,13 @@ class Canteen {
   /// Získá jídlo pro daný den
   /// Vyžaduje přihlášení pomocí [login]
   Future<Jidelnicek> jidelnicekDen({DateTime? den}) async {
+    if (!prihlasen) {
+      throw Exception("Uživatel není přihlášen");
+    }
     den ??= DateTime.now();
     var res = await _getRequest(
         "/faces/secured/main.jsp?day=${den.year}-${(den.month < 10) ? "0" + den.month.toString() : den.month}-${(den.day < 10) ? "0" + den.day.toString() : den.day}&terminal=false&printer=false&keyboard=false");
-    if (res!.contains("<title>iCanteen - přihlášení uživatele</title>")) {
+    if (res.contains("<title>iCanteen - přihlášení uživatele</title>")) {
       prihlasen = false;
       throw Exception("Nepřihlášen");
     }
@@ -286,7 +290,7 @@ class Canteen {
           nazev: jidlaProDen[1]
               .replaceAll(r' (?=[^a-zA-ZěščřžýáíéĚŠČŘŽÝÁÍÉŤŇťň])', ''),
           objednano: objednano,
-          cislo: vydejna,
+          varianta: vydejna,
           lzeObjednat: lzeObjednat,
           cena: cena,
           orderUrl: orderUrl,
@@ -301,18 +305,25 @@ class Canteen {
   }
 
   /// Objedná vybrané jídlo
-  /// Vrátí upravenou instanci [Jidlo], v případě chyby vrací originální
+  ///
+  /// Vrátí upravenou instanci [Jidlo], v případě chyby vyhodí [Exception]
   Future<Jidlo> objednat(Jidlo j) async {
+    if (!prihlasen) {
+      throw Exception("Uživatel není přihlášen");
+    }
     if (!j.lzeObjednat || j.orderUrl == null || j.orderUrl!.isEmpty) {
-      return j;
+      throw Exception("Jídlo nelze objednat nebo nemá adresu pro objednání");
     }
     var res =
         await _getRequest("/faces/secured/" + j.orderUrl!); // provést operaci
-    if (res == null || res.contains("Chyba")) return j;
+    if (res.contains("Chyba")) throw Exception("Při požadavku došlo k chybě");
+    if (res.contains("přihlášení uživatele")) {
+      prihlasen = false;
+      throw Exception("Uživatel není přihlášen");
+    }
 
     var novy = await _getRequest(
         "/faces/secured/db/dbJidelnicekOnDayView.jsp?day=${j.den.year}-${(j.den.month < 10) ? "0" + j.den.month.toString() : j.den.month}-${(j.den.day < 10) ? "0" + j.den.day.toString() : j.den.day}&terminal=false&rating=null&printer=false&keyboard=false"); // získat novou URL pro objednávání
-    if (novy == null) return j;
     var lzeObjednat =
         !(novy.contains("nelze zrušit") || novy.contains("nelze objednat"));
     String? orderUrl;
@@ -334,7 +345,7 @@ class Canteen {
     }
 
     return Jidlo(
-        cislo: j.cislo,
+        varianta: j.varianta,
         nazev: j.nazev,
         objednano: !j.objednano,
         cena: j.cena,
@@ -347,19 +358,27 @@ class Canteen {
             : !burzaUrl.contains("plusburza")); // vrátit upravenou instanci
   }
 
-  /// Uloží jídlo z/do burzy
+  /// Uloží vaše jídlo z/do burzy
   ///
-  /// Vrací upravenou instanci [Jidlo], v případě chyby vrací originální
+  /// Vrací upravenou instanci [Jidlo], v případě chyby vyhodí [Exception]
   Future<Jidlo> doBurzy(Jidlo j) async {
+    if (!prihlasen) {
+      throw Exception("Uživatel není přihlášen");
+    }
     if (j.burzaUrl == null || j.burzaUrl!.isEmpty) {
-      return j;
+      throw Exception(
+          "Jídlo nelze uložit do burzy nebo nemá adresu pro uložení");
     }
     var res =
         await _getRequest("/faces/secured/" + j.burzaUrl!); // provést operaci
-    if (res == null || res.contains("Chyba")) return j;
+    if (res.contains("Chyba")) return j;
+    if (res.contains("přihlášení uživatele")) {
+      prihlasen = false;
+      throw Exception("Uživatel není přihlášen");
+    }
+
     var novy = await _getRequest(
         "/faces/secured/db/dbJidelnicekOnDayView.jsp?day=${j.den.year}-${(j.den.month < 10) ? "0" + j.den.month.toString() : j.den.month}-${(j.den.day < 10) ? "0" + j.den.day.toString() : j.den.day}&terminal=false&rating=null&printer=false&keyboard=false"); // získat novou URL pro objednávání
-    if (novy == null) return j;
     var lzeObjednat =
         !(novy.contains("nelze zrušit") || novy.contains("nelze objednat"));
     String? orderUrl;
@@ -381,7 +400,7 @@ class Canteen {
     }
 
     return Jidlo(
-        cislo: j.cislo,
+        varianta: j.varianta,
         nazev: j.nazev,
         objednano: !j.objednano,
         cena: j.cena,
@@ -392,5 +411,61 @@ class Canteen {
         naBurze: (burzaUrl == null)
             ? false
             : !burzaUrl.contains("plusburza")); // vrátit upravenou instanci
+  }
+
+  /// Získá aktuální jídla v burze
+  Future<List<Burza>> ziskatBurzu() async {
+    if (!prihlasen) throw Exception("Uživatel není přihlášen");
+    List<Burza> burza = [];
+    var r = await _getRequest("/faces/secured/burza.jsp");
+    if (r.contains("Chyba")) throw Exception("Při požadavku došlo k chybě");
+    if (r.contains("přihlášení uživatele")) {
+      prihlasen = false;
+      throw Exception("Uživatel není přihlášen");
+    }
+    var dostupnaJidla =
+        RegExp(r'(?<=<tr class="mouseOutRow">).+?(?=<\/tr>)', dotAll: true)
+            .allMatches(r); // vyfiltrujeme jednotlivá jídla
+    if (dostupnaJidla.isNotEmpty) {
+      for (var burzaMatch in dostupnaJidla) {
+        var bu = burzaMatch.group(0)!;
+        var data = RegExp(
+                r'((?<=<td>).+?(?=<))|(?<=<td align="left">).+?(?=<)|((?<=<td align="right">).+?(?=<))',
+                dotAll: true)
+            .allMatches(bu)
+            .toList();
+        // Získat datum
+        var datumRaw = RegExp(r'\d\d\.\d\d\.\d{4}')
+            .firstMatch(data[1].group(0)!)!
+            .group(0)!
+            .split(".");
+        var datum =
+            DateTime.parse("${datumRaw[2]}-${datumRaw[1]}-${datumRaw[0]}");
+        // Získat variantu
+        var varianta = data[0].group(0)!;
+        // Získat název jídla
+        var nazev = data[2].group(0)!.replaceAll(RegExp(r'\n|  '), "");
+        // Získat počet kusů
+        var pocet = int.parse(data[3].group(0)!.replaceAll(" ks", ""));
+        var url = RegExp(r"(?<=')db.+?(?=')").firstMatch(bu)!.group(0)!;
+        var jidlo = Burza(
+            den: datum,
+            varianta: varianta,
+            jidlo: nazev,
+            pocet: pocet,
+            url: url);
+        burza.add(jidlo);
+      }
+    }
+    return burza;
+  }
+
+  /// Objedná jídlo z burzy pomocí URL z instance třídy Burza
+  ///
+  /// Vrací [bool] - true pokud se podařilo objednat, jinak false
+  Future<bool> objednatZBurzy(Burza b) async {
+    var res = await _getRequest("/faces/secured/" + b.url!);
+    if (res.contains("Chyba")) return false;
+    return true;
   }
 }
