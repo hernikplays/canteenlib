@@ -1,5 +1,6 @@
 ## 0.1.0-alpha.5
 - Přechod z `Exception` na `Future.error`
+[Všechny změny](https://github.com/hernikplays/canteenlib/compare/0.1.0-alpha.4...0.1.0-alpha.5)
 
 ## 0.1.0-alpha.4
 - Přidáno získání a objednávání cizích jídel z burzy
