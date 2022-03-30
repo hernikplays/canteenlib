@@ -1,3 +1,7 @@
+## 0.1.0-alpha.6
+- `return` místo `throw`
+[Všechny změny](https://github.com/hernikplays/canteenlib/compare/0.1.0-alpha.5...0.1.0-alpha.6)
+
 ## 0.1.0-alpha.5
 - Přechod z `Exception` na `Future.error`
 [Všechny změny](https://github.com/hernikplays/canteenlib/compare/0.1.0-alpha.4...0.1.0-alpha.5)
