@@ -25,6 +25,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+/// Reprezentuje kantýnu
+///
+/// `url` - adresa kantýny
+///
+/// `cookies` - sušenky potřebné pro komunikaci
+///
+/// `prihlasen` - je uživatel přihlášen?
+///
+/// **Všechny metody v případě chyby vrací [Future] s chybovou hláškou.**
 class Canteen {
   String url;
   Map<String, String> cookies = {"JSESSIONID": "", "XSRF-TOKEN": ""};
@@ -33,10 +43,10 @@ class Canteen {
 
   /// Vrátí informace o uživateli ve formě instance [Uzivatel]
   Future<Uzivatel> ziskejUzivatele() async {
-    if (!prihlasen) throw Exception("Uživatel není přihlášený");
+    if (!prihlasen) throw Future.error("Uživatel není přihlášen");
     var r = await _getRequest("/web/setting");
     if (r.contains("přihlášení uživatele")) {
-      throw Exception("Uživatel není přihlášený");
+      throw Future.error("Uživatel není přihlášen");
     }
     var m = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
         .firstMatch(r)!
@@ -97,7 +107,6 @@ class Canteen {
   /// `password` - heslo
   ///
   /// Vrátí `true`, když se uživatel přihlásil, v případě špatného hesla `false`
-  /// V případě chyby na serveru vyhodí [Exception]
   Future<bool> login(String user, String password) async {
     if (cookies["JSESSIONID"] == "" || cookies["XSRF-TOKEN"] == "") {
       await getFirstSession();
@@ -125,7 +134,7 @@ class Canteen {
     }
     print(res.statusCode);
     if (res.statusCode != 302) {
-      throw Exception("Chyba: ${res.body}");
+      throw Future.error("Chyba: ${res.body}");
     }
     _parseCookies(res.headers['set-cookie']!);
 
@@ -134,7 +143,6 @@ class Canteen {
   }
 
   /// Builder pro GET request
-  /// V případě chyby na serveru (divný status kód) vyhodí [Exception]
   Future<String> _getRequest(String path) async {
     var r = await http.get(Uri.parse(url + path), headers: {
       "Cookie": "JSESSIONID=" +
@@ -147,7 +155,7 @@ class Canteen {
               : ";"),
     });
     if (r.statusCode != 200) {
-      throw Exception("Chyba: ${r.body}");
+      throw Future.error("Chyba: ${r.body}");
     }
     if (r.headers.containsKey("set-cookie")) {
       _parseCookies(r.headers["set-cookie"]!);
@@ -225,14 +233,14 @@ class Canteen {
   /// Vyžaduje přihlášení pomocí [login]
   Future<Jidelnicek> jidelnicekDen({DateTime? den}) async {
     if (!prihlasen) {
-      throw Exception("Uživatel není přihlášen");
+      throw Future.error("Uživatel není přihlášen");
     }
     den ??= DateTime.now();
     var res = await _getRequest(
         "/faces/secured/main.jsp?day=${den.year}-${(den.month < 10) ? "0" + den.month.toString() : den.month}-${(den.day < 10) ? "0" + den.day.toString() : den.day}&terminal=false&printer=false&keyboard=false");
     if (res.contains("<title>iCanteen - přihlášení uživatele</title>")) {
       prihlasen = false;
-      throw Exception("Nepřihlášen");
+      throw Future.error("Uživatel není přihlášen");
     }
     var obedDen = DateTime.parse(RegExp(r'(?<=day-).+?(?=")', dotAll: true)
         .firstMatch(res)!
@@ -306,20 +314,22 @@ class Canteen {
 
   /// Objedná vybrané jídlo
   ///
-  /// Vrátí upravenou instanci [Jidlo], v případě chyby vyhodí [Exception]
+  /// Vrátí upravenou instanci [Jidlo], v případě chyby vyhodí [Future]
   Future<Jidlo> objednat(Jidlo j) async {
     if (!prihlasen) {
-      throw Exception("Uživatel není přihlášen");
+      throw Future.error("Uživatel není přihlášen");
     }
     if (!j.lzeObjednat || j.orderUrl == null || j.orderUrl!.isEmpty) {
-      throw Exception("Jídlo nelze objednat nebo nemá adresu pro objednání");
+      throw Future.error("Jídlo nelze objednat nebo nemá adresu pro objednání");
     }
     var res =
         await _getRequest("/faces/secured/" + j.orderUrl!); // provést operaci
-    if (res.contains("Chyba")) throw Exception("Při požadavku došlo k chybě");
+    if (res.contains("Chyba")) {
+      throw Future.error("Při požadavku došlo k chybě");
+    }
     if (res.contains("přihlášení uživatele")) {
       prihlasen = false;
-      throw Exception("Uživatel není přihlášen");
+      throw Future.error("Uživatel není přihlášen");
     }
 
     var novy = await _getRequest(
@@ -360,13 +370,13 @@ class Canteen {
 
   /// Uloží vaše jídlo z/do burzy
   ///
-  /// Vrací upravenou instanci [Jidlo], v případě chyby vyhodí [Exception]
+  /// Vrací upravenou instanci [Jidlo], v případě chyby vyhodí [Future]
   Future<Jidlo> doBurzy(Jidlo j) async {
     if (!prihlasen) {
-      throw Exception("Uživatel není přihlášen");
+      throw Future.error("Uživatel není přihlášen");
     }
     if (j.burzaUrl == null || j.burzaUrl!.isEmpty) {
-      throw Exception(
+      throw Future.error(
           "Jídlo nelze uložit do burzy nebo nemá adresu pro uložení");
     }
     var res =
@@ -374,7 +384,7 @@ class Canteen {
     if (res.contains("Chyba")) return j;
     if (res.contains("přihlášení uživatele")) {
       prihlasen = false;
-      throw Exception("Uživatel není přihlášen");
+      throw Future.error("Uživatel není přihlášen");
     }
 
     var novy = await _getRequest(
@@ -414,14 +424,16 @@ class Canteen {
   }
 
   /// Získá aktuální jídla v burze
+  ///
+  /// Vrátí [Burza], v případě chyby vyhodí [Future]
   Future<List<Burza>> ziskatBurzu() async {
-    if (!prihlasen) throw Exception("Uživatel není přihlášen");
+    if (!prihlasen) throw Future.error("Uživatel není přihlášen");
     List<Burza> burza = [];
     var r = await _getRequest("/faces/secured/burza.jsp");
-    if (r.contains("Chyba")) throw Exception("Při požadavku došlo k chybě");
+    if (r.contains("Chyba")) throw Future.error("Při požadavku došlo k chybě");
     if (r.contains("přihlášení uživatele")) {
       prihlasen = false;
-      throw Exception("Uživatel není přihlášen");
+      throw Future.error("Uživatel není přihlášen");
     }
     var dostupnaJidla =
         RegExp(r'(?<=<tr class="mouseOutRow">).+?(?=<\/tr>)', dotAll: true)

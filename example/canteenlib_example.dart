@@ -13,5 +13,8 @@ void main(List<String> args) {
         },
       );
     });
+  }).catchError((o) {
+    print(o);
+    return null;
   });
 }

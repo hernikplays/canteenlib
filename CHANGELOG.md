@@ -1,3 +1,6 @@
+## 0.1.0-alpha.5
+- Přechod z `Exception` na `Future.error`
+
 ## 0.1.0-alpha.4
 - Přidáno získání a objednávání cizích jídel z burzy
 - Třída `Jidlo`: ~~cislo~~ 👉 **varianta**
