@@ -43,10 +43,10 @@ class Canteen {
 
   /// Vrátí informace o uživateli ve formě instance [Uzivatel]
   Future<Uzivatel> ziskejUzivatele() async {
-    if (!prihlasen) throw Future.error("Uživatel není přihlášen");
+    if (!prihlasen) return Future.error("Uživatel není přihlášen");
     var r = await _getRequest("/web/setting");
     if (r.contains("přihlášení uživatele")) {
-      throw Future.error("Uživatel není přihlášen");
+      return Future.error("Uživatel není přihlášen");
     }
     var m = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
         .firstMatch(r)!
@@ -134,7 +134,7 @@ class Canteen {
     }
     print(res.statusCode);
     if (res.statusCode != 302) {
-      throw Future.error("Chyba: ${res.body}");
+      return Future.error("Chyba: ${res.body}");
     }
     _parseCookies(res.headers['set-cookie']!);
 
@@ -155,7 +155,7 @@ class Canteen {
               : ";"),
     });
     if (r.statusCode != 200) {
-      throw Future.error("Chyba: ${r.body}");
+      return Future.error("Chyba: ${r.body}");
     }
     if (r.headers.containsKey("set-cookie")) {
       _parseCookies(r.headers["set-cookie"]!);
@@ -233,14 +233,14 @@ class Canteen {
   /// Vyžaduje přihlášení pomocí [login]
   Future<Jidelnicek> jidelnicekDen({DateTime? den}) async {
     if (!prihlasen) {
-      throw Future.error("Uživatel není přihlášen");
+      return Future.error("Uživatel není přihlášen");
     }
     den ??= DateTime.now();
     var res = await _getRequest(
         "/faces/secured/main.jsp?day=${den.year}-${(den.month < 10) ? "0" + den.month.toString() : den.month}-${(den.day < 10) ? "0" + den.day.toString() : den.day}&terminal=false&printer=false&keyboard=false");
     if (res.contains("<title>iCanteen - přihlášení uživatele</title>")) {
       prihlasen = false;
-      throw Future.error("Uživatel není přihlášen");
+      return Future.error("Uživatel není přihlášen");
     }
     var obedDen = DateTime.parse(RegExp(r'(?<=day-).+?(?=")', dotAll: true)
         .firstMatch(res)!
@@ -314,22 +314,23 @@ class Canteen {
 
   /// Objedná vybrané jídlo
   ///
-  /// Vrátí upravenou instanci [Jidlo], v případě chyby vyhodí [Future]
+  /// Vrátí upravenou instanci [Jidlo], v případě chyby vrátí chybový [Future]
   Future<Jidlo> objednat(Jidlo j) async {
     if (!prihlasen) {
-      throw Future.error("Uživatel není přihlášen");
+      return Future.error("Uživatel není přihlášen");
     }
     if (!j.lzeObjednat || j.orderUrl == null || j.orderUrl!.isEmpty) {
-      throw Future.error("Jídlo nelze objednat nebo nemá adresu pro objednání");
+      return Future.error(
+          "Jídlo nelze objednat nebo nemá adresu pro objednání");
     }
     var res =
         await _getRequest("/faces/secured/" + j.orderUrl!); // provést operaci
     if (res.contains("Chyba")) {
-      throw Future.error("Při požadavku došlo k chybě");
+      return Future.error("Při požadavku došlo k chybě");
     }
     if (res.contains("přihlášení uživatele")) {
       prihlasen = false;
-      throw Future.error("Uživatel není přihlášen");
+      return Future.error("Uživatel není přihlášen");
     }
 
     var novy = await _getRequest(
@@ -370,13 +371,13 @@ class Canteen {
 
   /// Uloží vaše jídlo z/do burzy
   ///
-  /// Vrací upravenou instanci [Jidlo], v případě chyby vyhodí [Future]
+  /// Vrací upravenou instanci [Jidlo], v případě chyby vrátí chybový [Future]
   Future<Jidlo> doBurzy(Jidlo j) async {
     if (!prihlasen) {
-      throw Future.error("Uživatel není přihlášen");
+      return Future.error("Uživatel není přihlášen");
     }
     if (j.burzaUrl == null || j.burzaUrl!.isEmpty) {
-      throw Future.error(
+      return Future.error(
           "Jídlo nelze uložit do burzy nebo nemá adresu pro uložení");
     }
     var res =
@@ -384,7 +385,7 @@ class Canteen {
     if (res.contains("Chyba")) return j;
     if (res.contains("přihlášení uživatele")) {
       prihlasen = false;
-      throw Future.error("Uživatel není přihlášen");
+      return Future.error("Uživatel není přihlášen");
     }
 
     var novy = await _getRequest(
@@ -425,15 +426,15 @@ class Canteen {
 
   /// Získá aktuální jídla v burze
   ///
-  /// Vrátí [Burza], v případě chyby vyhodí [Future]
+  /// Vrátí [Burza], v případě chyby vrátí chybový [Future]
   Future<List<Burza>> ziskatBurzu() async {
-    if (!prihlasen) throw Future.error("Uživatel není přihlášen");
+    if (!prihlasen) return Future.error("Uživatel není přihlášen");
     List<Burza> burza = [];
     var r = await _getRequest("/faces/secured/burza.jsp");
-    if (r.contains("Chyba")) throw Future.error("Při požadavku došlo k chybě");
+    if (r.contains("Chyba")) return Future.error("Při požadavku došlo k chybě");
     if (r.contains("přihlášení uživatele")) {
       prihlasen = false;
-      throw Future.error("Uživatel není přihlášen");
+      return Future.error("Uživatel není přihlášen");
     }
     var dostupnaJidla =
         RegExp(r'(?<=<tr class="mouseOutRow">).+?(?=<\/tr>)', dotAll: true)
