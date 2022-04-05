@@ -135,7 +135,6 @@ class Canteen {
     if (res.headers['set-cookie']!.contains("remember-me=;")) {
       return false; // špatné heslo
     }
-    print(res.statusCode);
     if (res.statusCode != 302) {
       return Future.error("Chyba: ${res.body}");
     }
@@ -261,10 +260,11 @@ class Canteen {
         .group(0)
         .toString());
     var jidla = <Jidlo>[];
-    var jidelnicek =
-        RegExp(r'(?<=<div class="jidWrapLeft">).+?(?=<br>)', dotAll: true)
-            .allMatches(res)
-            .toList();
+    var jidelnicek = RegExp(
+            r'((?<=<div class="jidWrapLeft">).+?do burzy)|((?<=<div class="jidWrapLeft">).+?(?=<br>))',
+            dotAll: true)
+        .allMatches(res)
+        .toList();
     for (var obed in jidelnicek) {
       // formátování do třídy
       var o = obed
@@ -487,7 +487,7 @@ class Canteen {
         var jidlo = Burza(
             den: datum,
             varianta: varianta,
-            jidlo: nazev,
+            nazev: nazev,
             pocet: pocet,
             url: url);
         burza.add(jidlo);

@@ -1,3 +1,6 @@
+## 0.1.0-alpha.8
+- Opravit získávání URL z burzy v `jidelnicekDen`
+- tridy.dart - Burza: ~~jidlo~~ --> __nazev__
 ## 0.1.0-alpha.7
 - Nastavovat `prihlasen` na `false` v případě chyby i u `ziskejUzivatele`
 - Vylepšení dokumentace

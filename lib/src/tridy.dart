@@ -47,7 +47,7 @@ class Burza {
   final String? url;
 
   /// Název jídla
-  String jidlo;
+  String nazev;
 
   /// Varianta
   String? varianta;
@@ -58,7 +58,7 @@ class Burza {
   Burza(
       {required this.den,
       required this.url,
-      required this.jidlo,
+      required this.nazev,
       required this.pocet,
       this.varianta});
 }
