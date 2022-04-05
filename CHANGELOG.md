@@ -1,3 +1,5 @@
+## 0.1.0-alpha.9
+- Opravit opravu
 ## 0.1.0-alpha.8
 - Opravit získávání URL z burzy v `jidelnicekDen`
 - tridy.dart - Burza: ~~jidlo~~ --> __nazev__
