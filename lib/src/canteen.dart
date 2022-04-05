@@ -286,6 +286,7 @@ class Canteen {
           .firstMatch(o)!
           .group(0)
           .toString()
+          .replaceAll("<br>", "")
           .split(" / ");
       var vydejna = RegExp(
               r'(?<=<span class="smallBoldTitle button-link-align">).+?(?=<)')
