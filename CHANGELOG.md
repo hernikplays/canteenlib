@@ -1,3 +1,5 @@
+## 0.1.0-alpha.11
+- Opravit nevkládání URL pro jídlo co má uživatel již v burze
 ## 0.1.0-alpha.10
 - Doufám, že skutečně opraví získávání URL
 - Lepší formátování názvu
