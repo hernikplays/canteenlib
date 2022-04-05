@@ -303,8 +303,9 @@ class Canteen {
         }
       } else {
         // jinak nastavíme URL pro burzu
-        var match = RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?do burzy")
-            .firstMatch(o);
+        var match =
+            RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?(do burzy)|(z burzy)")
+                .firstMatch(o);
         if (match != null) {
           burzaUrl = match.group(1)!.replaceAll("amp;", "");
         }
@@ -367,8 +368,9 @@ class Canteen {
       }
     } else {
       // jinak nastavíme URL pro burzu
-      var match = RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?do burzy")
-          .firstMatch(novy);
+      var match =
+          RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?(do burzy)|(z burzy)")
+              .firstMatch(novy);
       if (match != null) {
         burzaUrl = match.group(1)!.replaceAll("amp;", "");
       }
@@ -426,8 +428,9 @@ class Canteen {
       }
     } else {
       // jinak nastavíme URL pro burzu
-      var match = RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?do burzy")
-          .firstMatch(novy);
+      var match =
+          RegExp(r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?(do burzy)|(z burzy)")
+              .firstMatch(novy);
       if (match != null) {
         burzaUrl = match.group(1)!.replaceAll("amp;", "");
       }
