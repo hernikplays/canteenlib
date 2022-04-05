@@ -1,6 +1,6 @@
 name: canteenlib
 description: Library for communication with the czech canteen food ordering system iCanteen
-version: 0.1.0-alpha.9
+version: 0.1.0-alpha.10
 repository: 'https://github.com/hernikplays/canteenlib'
 issue_tracker: 'https://github.com/hernikplays/canteenlib/issues'
 documentation: 'https://docs.hernikplays.cz'

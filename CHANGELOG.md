@@ -1,5 +1,8 @@
+## 0.1.0-alpha.10
+- Doufám, že skutečně opraví získávání URL
+- Lepší formátování názvu
 ## 0.1.0-alpha.9
-- Opravit opravu
+- Vzít změny zpět
 ## 0.1.0-alpha.8
 - Opravit získávání URL z burzy v `jidelnicekDen`
 - tridy.dart - Burza: ~~jidlo~~ --> __nazev__

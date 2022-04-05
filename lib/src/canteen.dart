@@ -260,11 +260,10 @@ class Canteen {
         .group(0)
         .toString());
     var jidla = <Jidlo>[];
-    var jidelnicek = RegExp(
-            r'((?<=<div class="jidWrapLeft">).+?((?=<br>)|(do burzy)))',
-            dotAll: true)
-        .allMatches(res)
-        .toList();
+    var jidelnicek =
+        RegExp(r'(?<=<div class="jidWrapLeft">).+?((fa-clock))', dotAll: true)
+            .allMatches(res)
+            .toList();
     for (var obed in jidelnicek) {
       // formátování do třídy
       var o = obed
@@ -286,6 +285,8 @@ class Canteen {
           .firstMatch(o)!
           .group(0)
           .toString()
+          .replaceAll(' ,', ",")
+          .replaceAll(" <br>", "")
           .split(" / ");
       var vydejna = RegExp(
               r'(?<=<span class="smallBoldTitle button-link-align">).+?(?=<)')
