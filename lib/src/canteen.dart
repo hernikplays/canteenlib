@@ -261,7 +261,7 @@ class Canteen {
         .toString());
     var jidla = <Jidlo>[];
     var jidelnicek = RegExp(
-            r'((?<=<div class="jidWrapLeft">).+?do burzy)|((?<=<div class="jidWrapLeft">).+?(?=<br>))',
+            r'((?<=<div class="jidWrapLeft">).+?((?=<br>)|(do burzy)))',
             dotAll: true)
         .allMatches(res)
         .toList();
@@ -286,7 +286,6 @@ class Canteen {
           .firstMatch(o)!
           .group(0)
           .toString()
-          .replaceAll("<br>", "")
           .split(" / ");
       var vydejna = RegExp(
               r'(?<=<span class="smallBoldTitle button-link-align">).+?(?=<)')
