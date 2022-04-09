@@ -432,7 +432,7 @@ class Canteen {
         // Získat název jídla
         var nazev = data[2].group(0)!.replaceAll(RegExp(r'\n|  '), "");
         // Získat počet kusů
-        var pocet = int.parse(data[3].group(0)!.replaceAll(" ks", ""));
+        var pocet = int.parse(data[4].group(0)!.replaceAll(" ks", ""));
         var url = RegExp(r"(?<=')db.+?(?=')").firstMatch(bu)!.group(0)!;
         var jidlo = Burza(
             den: datum,

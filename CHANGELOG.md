@@ -1,3 +1,5 @@
+## 0.1.0-alpha.14
+- Oprava `ziskejBurzu`, kvůli špatnému parsování
 ## 0.1.0-alpha.13
 - Další opravy
 - Úprava metod `doBurzy` a `objednat`, aby opravdu mohly vracet aktualizované instance `Jidlo`
