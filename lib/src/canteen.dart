@@ -156,7 +156,7 @@ class Canteen {
               ? "; " + cookies["remember-me"]! + ";"
               : ";"),
     });
-    if (r.statusCode != 200) {
+    if (r.statusCode != 200 || r.body.contains("fail")) {
       return Future.error("Chyba: ${r.body}");
     }
     if (r.headers.containsKey("set-cookie")) {
@@ -455,7 +455,7 @@ class Canteen {
   /// - [bool], `true`, pokud bylo jídlo úspěšně objednáno z burzy, jinak `false`
   Future<bool> objednatZBurzy(Burza b) async {
     if (!prihlasen) return Future.error("Uživatel není přihlášen");
-    var res = await _getRequest("/faces/secured/" + b.url!);
+    var res = await _getRequest("/faces/secured/" + b.url!); // TODO: SPRAVIT
     if (res.contains("Chyba")) return false;
     return true;
   }
