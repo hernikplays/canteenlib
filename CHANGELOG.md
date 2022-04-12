@@ -1,3 +1,6 @@
+## 0.1.0-alpha.15
+- Úprava nakládání s chybami v `_getRequest`
+- `fail` je chyba
 ## 0.1.0-alpha.14
 - Oprava `ziskejBurzu`, kvůli špatnému parsování
 ## 0.1.0-alpha.13

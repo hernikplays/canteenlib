@@ -156,8 +156,14 @@ class Canteen {
               ? "; " + cookies["remember-me"]! + ";"
               : ";"),
     });
-    if (r.statusCode != 200 || r.body.contains("fail")) {
+    if (r.statusCode != 200 ||
+        r.body.contains("fail") ||
+        r.body.contains("Chyba")) {
       return Future.error("Chyba: ${r.body}");
+    }
+    if (r.body.contains("přihlášení uživatele")) {
+      prihlasen = false;
+      return Future.error("Uživatel není přihlášen");
     }
     if (r.headers.containsKey("set-cookie")) {
       _parseCookies(r.headers["set-cookie"]!);
@@ -249,11 +255,12 @@ class Canteen {
       return Future.error("Uživatel není přihlášen");
     }
     den ??= DateTime.now();
-    var res = await _getRequest(
-        "/faces/secured/main.jsp?day=${den.year}-${(den.month < 10) ? "0" + den.month.toString() : den.month}-${(den.day < 10) ? "0" + den.day.toString() : den.day}&terminal=false&printer=false&keyboard=false");
-    if (res.contains("<title>iCanteen - přihlášení uživatele</title>")) {
-      prihlasen = false;
-      return Future.error("Uživatel není přihlášen");
+    String res;
+    try {
+      res = await _getRequest(
+          "/faces/secured/main.jsp?day=${den.year}-${(den.month < 10) ? "0" + den.month.toString() : den.month}-${(den.day < 10) ? "0" + den.day.toString() : den.day}&terminal=false&printer=false&keyboard=false");
+    } catch (e) {
+      return Future.error(e);
     }
     var obedDen = DateTime.parse(RegExp(r'(?<=day-).+?(?=")', dotAll: true)
         .firstMatch(res)!
@@ -343,14 +350,11 @@ class Canteen {
       return Future.error(
           "Jídlo nelze objednat nebo nemá adresu pro objednání");
     }
-    var res =
-        await _getRequest("/faces/secured/" + j.orderUrl!); // provést operaci
-    if (res.contains("Chyba")) {
-      return Future.error("Při požadavku došlo k chybě");
-    }
-    if (res.contains("přihlášení uživatele")) {
-      prihlasen = false;
-      return Future.error("Uživatel není přihlášen");
+
+    try {
+      await _getRequest("/faces/secured/" + j.orderUrl!); // provést operaci
+    } catch (e) {
+      return Future.error(e);
     }
 
     var novy = (await jidelnicekDen(den: j.den))
@@ -378,12 +382,10 @@ class Canteen {
       return Future.error(
           "Jídlo nelze uložit do burzy nebo nemá adresu pro uložení");
     }
-    var res =
-        await _getRequest("/faces/secured/" + j.burzaUrl!); // provést operaci
-    if (res.contains("Chyba")) return Future.error("Chyba při vykonávání");
-    if (res.contains("přihlášení uživatele")) {
-      prihlasen = false;
-      return Future.error("Uživatel není přihlášen");
+    try {
+      await _getRequest("/faces/secured/" + j.burzaUrl!); // provést operaci
+    } catch (e) {
+      return Future.error(e);
     }
 
     var novy = (await jidelnicekDen(den: j.den))
@@ -403,15 +405,17 @@ class Canteen {
   Future<List<Burza>> ziskatBurzu() async {
     if (!prihlasen) return Future.error("Uživatel není přihlášen");
     List<Burza> burza = [];
-    var r = await _getRequest("/faces/secured/burza.jsp");
-    if (r.contains("Chyba")) return Future.error("Při požadavku došlo k chybě");
-    if (r.contains("přihlášení uživatele")) {
-      prihlasen = false;
-      return Future.error("Uživatel není přihlášen");
+
+    String res;
+    try {
+      res = await _getRequest("/faces/secured/burza.jsp");
+    } catch (e) {
+      return Future.error(e);
     }
+
     var dostupnaJidla =
         RegExp(r'(?<=<tr class="mouseOutRow">).+?(?=<\/tr>)', dotAll: true)
-            .allMatches(r); // vyfiltrujeme jednotlivá jídla
+            .allMatches(res); // vyfiltrujeme jednotlivá jídla
     if (dostupnaJidla.isNotEmpty) {
       for (var burzaMatch in dostupnaJidla) {
         var bu = burzaMatch.group(0)!;
@@ -455,8 +459,11 @@ class Canteen {
   /// - [bool], `true`, pokud bylo jídlo úspěšně objednáno z burzy, jinak `false`
   Future<bool> objednatZBurzy(Burza b) async {
     if (!prihlasen) return Future.error("Uživatel není přihlášen");
-    var res = await _getRequest("/faces/secured/" + b.url!); // TODO: SPRAVIT
-    if (res.contains("Chyba")) return false;
+    try {
+      await _getRequest("/faces/secured/" + b.url!); // TODO: SPRAVIT
+    } catch (e) {
+      return false;
+    }
     return true;
   }
 }
