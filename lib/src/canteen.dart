@@ -278,8 +278,9 @@ class Canteen {
           .toString()
           .replaceAll(RegExp(r'(   )+|([^>a-z]\n)'), '');
       var objednano = o.contains("Máte objednáno");
-      var lzeObjednat =
-          !(o.contains("nelze zrušit") || o.contains("nelze objednat"));
+      var lzeObjednat = !(o.contains("nelze zrušit") ||
+          o.contains("nelze objednat") ||
+          o.contains("nelze změnit"));
       var cenaMatch =
           RegExp(r'(?<=Cena objednaného jídla">).+?(?=&)').firstMatch(o);
       cenaMatch ??=
@@ -463,7 +464,7 @@ class Canteen {
   Future<bool> objednatZBurzy(Burza b) async {
     if (!prihlasen) return Future.error("Uživatel není přihlášen");
     try {
-      await _getRequest("/faces/secured/" + b.url!); // TODO: SPRAVIT
+      await _getRequest("/faces/secured/" + b.url!);
     } catch (e) {
       return false;
     }
