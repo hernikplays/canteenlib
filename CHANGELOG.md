@@ -1,4 +1,4 @@
-## 0.1.0-alpha.15
+## 0.1.0-alpha.16
 - Opravit zobrazení zda-li jde jídlo objednat, když není objednané žádné jídlo
 ## 0.1.0-alpha.15
 - Úprava nakládání s chybami v `_getRequest`
