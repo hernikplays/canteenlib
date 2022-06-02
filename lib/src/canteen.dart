@@ -460,13 +460,13 @@ class Canteen {
   /// - `b` - Jídlo __z burzy__, které chceme objednat | [Burza]
   ///
   /// Výstup:
-  /// - [bool], `true`, pokud bylo jídlo úspěšně objednáno z burzy, jinak `false`
+  /// - [bool], `true`, pokud bylo jídlo úspěšně objednáno z burzy, jinak `Exception`
   Future<bool> objednatZBurzy(Burza b) async {
     if (!prihlasen) return Future.error("Uživatel není přihlášen");
     try {
       await _getRequest("/faces/secured/" + b.url!);
     } catch (e) {
-      return false;
+      return Future.error(e.toString());
     }
     return true;
   }

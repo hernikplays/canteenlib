@@ -1,3 +1,5 @@
+## 0.1.0-alpha.17
+- Debug informace v `objednatZBurzy`
 ## 0.1.0-alpha.16
 - Opravit zobrazení zda-li jde jídlo objednat, když není objednané žádné jídlo
 ## 0.1.0-alpha.15
