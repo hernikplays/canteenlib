@@ -41,4 +41,4 @@ Metoda vrací `bool` nebo chybu. Pokud se nelze přihlásit pomocí jména nebo 
 
 ## Dělejte co potřebujete
 
-Nyní byste měli být připravení na to, abyste posílali ostatní požadavky. Prohlédněte si [referenci](broken-reference), [podrobnou dokumentaci](https://pub.dev/documentation/canteenlib/latest/canteenlib/canteenlib-library.html) nebo [příklady](reference/priklady.md) pro pomoc s pokračováním.
+Nyní byste měli být připravení na to, abyste posílali ostatní požadavky. Prohlédněte si [referenci](reference/prehled-trid.md), [podrobnou dokumentaci](https://pub.dev/documentation/canteenlib/latest/canteenlib/canteenlib-library.html) nebo [příklady](reference/priklady.md) pro pomoc s pokračováním.
