@@ -14,7 +14,7 @@ Knihovna je hostována na [pub.dev](https://pub.dev/packages/canteenlib), instal
 
 ## Vytvořit instanci
 
-Základem je vytvoření instance třídy `Canteen`, která obsahuje všechny metody pro komunikaci s iCanteen. Jediný parametr této třídy je URL k vašemu kýženému iCanteen.
+Základem je vytvoření instance třídy [`Canteen`](reference/prehled-trid.md#canteen), která obsahuje všechny metody pro komunikaci s iCanteen. Jediný parametr této třídy je URL k vašemu kýženému iCanteen.
 
 ```dart
 import 'package:canteenlib/canteenlib.dart';
