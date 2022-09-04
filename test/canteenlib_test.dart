@@ -7,13 +7,24 @@ void main() {
     load();
     Canteen c = Canteen(env["ADDRESS"]!);
 
-    setUp(() {
-      c.login(env["USER"]!, env["PASS"]!);
+    test('Log-in test', () {
+      c.login(env["USER"]!, env["PASS"]!).then((r) => expect(r, true));
     });
 
     test('First Test', () {
-      c.jidelnicekDen().then((t) {
-        expect(DateTime.now().day, t.den.day);
+      c.login(env["USER"]!, env["PASS"]!).then((r) {
+        c.jidelnicekDen().then((t) {
+          expect(DateTime.now().day, t.den.day);
+        });
+      });
+    });
+
+    test('Neprázdný jídelníček', () {
+      c.login(env["USER"]!, env["PASS"]!).then((r) {
+        c.jidelnicekDen(den: DateTime.parse("2022-08-15")).then((t) {
+          print(t.jidla[0].nazev);
+          expect(t.jidla[0].nazev.isNotEmpty, true);
+        });
       });
     });
   });

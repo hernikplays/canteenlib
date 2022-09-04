@@ -114,6 +114,7 @@ class Canteen {
     if (cookies["JSESSIONID"] == "" || cookies["XSRF-TOKEN"] == "") {
       await _getFirstSession();
     }
+
     var res =
         await http.post(Uri.parse(url + "/j_spring_security_check"), headers: {
       "Cookie": "JSESSIONID=" +
@@ -132,9 +133,11 @@ class Canteen {
       "targetUrl":
           "/faces/secured/main.jsp?terminal=false&status=true&printer=&keyboard="
     });
+
     if (res.headers['set-cookie']!.contains("remember-me=;")) {
       return false; // špatné heslo
     }
+
     if (res.statusCode != 302) {
       return Future.error("Chyba: ${res.body}");
     }
@@ -156,18 +159,22 @@ class Canteen {
               ? "; " + cookies["remember-me"]! + ";"
               : ";"),
     });
+
     if (r.statusCode != 200 ||
         r.body.contains("fail") ||
         r.body.contains("Chyba")) {
       return Future.error("Chyba: ${r.body}");
     }
+
     if (r.body.contains("přihlášení uživatele")) {
       prihlasen = false;
       return Future.error("Uživatel není přihlášen");
     }
+
     if (r.headers.containsKey("set-cookie")) {
       _parseCookies(r.headers["set-cookie"]!);
     }
+
     return r.body;
   }
 
@@ -184,14 +191,12 @@ class Canteen {
             dotAll: true)
         .allMatches(res)
         .toList();
+
     List<Jidelnicek> jidelnicek = [];
+
     for (var t in reg) {
       // projedeme každý den individuálně
-      var j = t
-              .group(0)
-              .toString() /*.replaceAll(RegExp(r'(   )+|([^>a-z]\n)'),
-          '')*/
-          ; // převedeme text na něco přehlednějšího
+      var j = t.group(0).toString(); // převedeme text na něco přehlednějšího
       var den = DateTime.parse(RegExp(r'(?<=day-).+?(?=")', dotAll: true)
           .firstMatch(j)!
           .group(0)
@@ -210,24 +215,28 @@ class Canteen {
       }
 
       List<Jidlo> jidla = [];
+
       for (var jidloNaDen in jidlaDenne) {
         // projedeme vsechna jidla
         var s = jidloNaDen.group(0)!.replaceAll(
             RegExp(
                 r'[a-zA-ZěščřžýáíéÉÍÁÝŽŘČŠĚŤŇťň.,:]  [a-zA-ZěščřžýáíéÉÍÁÝŽŘČŠĚŤŇťň.,:]'),
             ''); // odstraní dvojté mezery mezi písmeny
+
         var vydejna = RegExp(r'(?<=<span style="color: #1b75bb;">).+?(?=<)')
             .firstMatch(s); // název výdejny / verze 2.18
         vydejna ??= RegExp(
                 // TODO: Lepší systém pro podporu různých verzí iCanteen
                 r'(?<=<span class="smallBoldTitle" style="color: #1b75bb;">).+?(?=<)')
             .firstMatch(s); // název výdejny / verze 2.10
+
         var hlavni = RegExp(
                 r' {20}(([a-zA-ZěščřžýáíéÉÍÁÝŽŘČŠĚŤŇťň.,:\/]+ )+[a-zA-ZěščřžýáíéÉÍÁÝŽŘČŠĚŤŇťň.,:\/]+)',
                 dotAll: true)
             .firstMatch(s)!
             .group(1)
             .toString(); // Jídlo
+
         jidla.add(Jidlo(
             nazev: hlavni,
             objednano: false,
@@ -254,7 +263,9 @@ class Canteen {
     if (!prihlasen) {
       return Future.error("Uživatel není přihlášen");
     }
+
     den ??= DateTime.now();
+
     String res;
     try {
       res = await _getRequest(
@@ -262,6 +273,7 @@ class Canteen {
     } catch (e) {
       return Future.error(e);
     }
+
     var obedDen = DateTime.parse(RegExp(r'(?<=day-).+?(?=")', dotAll: true)
         .firstMatch(res)!
         .group(0)
@@ -271,6 +283,7 @@ class Canteen {
         RegExp(r'(?<=<div class="jidWrapLeft">).+?((fa-clock))', dotAll: true)
             .allMatches(res)
             .toList();
+
     for (var obed in jidelnicek) {
       // formátování do třídy
       var o = obed
@@ -281,12 +294,14 @@ class Canteen {
       var lzeObjednat = !(o.contains("nelze zrušit") ||
           o.contains("nelze objednat") ||
           o.contains("nelze změnit"));
+
       var cenaMatch =
           RegExp(r'(?<=Cena objednaného jídla">).+?(?=&)').firstMatch(o);
       cenaMatch ??=
           RegExp(r'(?<=Cena při objednání jídla:&nbsp;).+?(?=&)').firstMatch(o);
       cenaMatch ??=
           RegExp(r'(?<=Cena při objednání jídla">).+?(?=&)').firstMatch(o);
+
       var cena =
           double.parse(cenaMatch!.group(0).toString().replaceAll(",", "."));
       var jidlaProDen = RegExp(r'(?<=Polévka: ).+')
@@ -301,6 +316,7 @@ class Canteen {
           .firstMatch(o)!
           .group(0)
           .toString();
+
       String? orderUrl;
       String? burzaUrl;
       if (lzeObjednat) {
@@ -318,6 +334,7 @@ class Canteen {
           burzaUrl = match.group(1)!.replaceAll("amp;", "");
         }
       }
+
       jidla.add(Jidlo(
           nazev: jidlaProDen[1]
               .replaceAll(r' (?=[^a-zA-ZěščřžýáíéĚŠČŘŽÝÁÍÉŤŇťň])', ''),
@@ -347,6 +364,7 @@ class Canteen {
     if (!prihlasen) {
       return Future.error("Uživatel není přihlášen");
     }
+
     if (!j.lzeObjednat || j.orderUrl == null || j.orderUrl!.isEmpty) {
       return Future.error(
           "Jídlo nelze objednat nebo nemá adresu pro objednání");
@@ -379,10 +397,12 @@ class Canteen {
     if (!prihlasen) {
       return Future.error("Uživatel není přihlášen");
     }
+
     if (j.burzaUrl == null || j.burzaUrl!.isEmpty) {
       return Future.error(
           "Jídlo nelze uložit do burzy nebo nemá adresu pro uložení");
     }
+
     try {
       await _getRequest("/faces/secured/" + j.burzaUrl!); // provést operaci
     } catch (e) {
@@ -425,6 +445,7 @@ class Canteen {
                 dotAll: true)
             .allMatches(bu)
             .toList();
+
         // Získat datum
         var datumRaw = RegExp(r'\d\d\.\d\d\.\d{4}')
             .firstMatch(data[1].group(0)!)!
@@ -442,6 +463,7 @@ class Canteen {
             .firstMatch(bu)!
             .group(0)!
             .replaceAll("&amp;", "&");
+
         var jidlo = Burza(
             den: datum,
             varianta: varianta,
