@@ -1,3 +1,5 @@
+## 1.0.0
+- Stabilizace
 ## 0.1.0-alpha.17
 - Debug informace v `objednatZBurzy`
 ## 0.1.0-alpha.16
