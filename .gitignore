@@ -10,3 +10,5 @@ build/
 pubspec.lock
 .env*
 *.test.dart
+
+node_modules/
