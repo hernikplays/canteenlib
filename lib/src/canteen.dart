@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 
 import 'tridy.dart';
@@ -283,7 +285,6 @@ class Canteen {
         RegExp(r'(?<=<div class="jidWrapLeft">).+?((fa-clock))', dotAll: true)
             .allMatches(res)
             .toList();
-
     for (var obed in jidelnicek) {
       // formátování do třídy
       var o = obed
@@ -304,13 +305,13 @@ class Canteen {
 
       var cena =
           double.parse(cenaMatch!.group(0).toString().replaceAll(",", "."));
-      var jidlaProDen = RegExp(r'(?<=Polévka: ).+')
-          .firstMatch(o)!
-          .group(0)
-          .toString()
-          .replaceAll(' ,', ",")
-          .replaceAll(" <br>", "")
-          .split(" / ");
+      var jidlaProDen =
+          RegExp(r'<div class="jidWrapCenter.+?>(.+?)(?=<\/div>)', dotAll: true)
+              .firstMatch(o)!
+              .group(1)
+              .toString()
+              .replaceAll(' ,', ",")
+              .replaceAll(" <br>", "");
       var vydejna = RegExp(
               r'(?<=<span class="smallBoldTitle button-link-align">).+?(?=<)')
           .firstMatch(o)!
@@ -336,8 +337,8 @@ class Canteen {
       }
 
       jidla.add(Jidlo(
-          nazev: jidlaProDen[1]
-              .replaceAll(r' (?=[^a-zA-ZěščřžýáíéĚŠČŘŽÝÁÍÉŤŇťň])', ''),
+          nazev: jidlaProDen.replaceAll(
+              r' (?=[^a-zA-ZěščřžýáíéĚŠČŘŽÝÁÍÉŤŇťň])', ''),
           objednano: objednano,
           varianta: vydejna,
           lzeObjednat: lzeObjednat,

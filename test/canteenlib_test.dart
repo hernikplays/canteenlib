@@ -1,10 +1,10 @@
 import 'package:canteenlib/canteenlib.dart';
 import 'package:test/test.dart';
-import 'package:dotenv/dotenv.dart' show load, env;
+import 'package:dotenv/dotenv.dart';
 
 void main() {
   group('A group of tests', () {
-    load();
+    var env = DotEnv(includePlatformEnvironment: true)..load();
     Canteen c = Canteen(env["ADDRESS"]!);
 
     test('Log-in test', () {
@@ -21,7 +21,7 @@ void main() {
 
     test('Neprázdný jídelníček', () {
       c.login(env["USER"]!, env["PASS"]!).then((r) {
-        c.jidelnicekDen(den: DateTime.parse("2022-08-15")).then((t) {
+        c.jidelnicekDen(den: DateTime.now().add(Duration(days: 5))).then((t) {
           print(t.jidla[0].nazev);
           expect(t.jidla[0].nazev.isNotEmpty, true);
         });
