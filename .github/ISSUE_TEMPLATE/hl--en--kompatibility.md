@@ -16,6 +16,10 @@ assignees: hernikplays
 - [ ] ziskejJidelnicek
 - [ ] jidelnicekDen
 - [ ] objednat
+- [ ] doBurzy
+- [ ] objednatZBurzy
+- [ ] ziskatBurzu
+- [ ] ziskejUzivatele
 
 **V případě nefunkčnosti některé z metod vkládejte sem chybové hlášky a váš kód**
 
