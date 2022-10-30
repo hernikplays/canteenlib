@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:http/http.dart' as http;
 
 import 'tridy.dart';
@@ -118,13 +116,9 @@ class Canteen {
     }
 
     var res =
-        await http.post(Uri.parse(url + "/j_spring_security_check"), headers: {
-      "Cookie": "JSESSIONID=" +
-          cookies["JSESSIONID"]! +
-          "; " +
-          "XSRF-TOKEN=" +
-          cookies["XSRF-TOKEN"]! +
-          ";",
+        await http.post(Uri.parse("$url/j_spring_security_check"), headers: {
+      "Cookie":
+          "JSESSIONID=${cookies["JSESSIONID"]!}; XSRF-TOKEN=${cookies["XSRF-TOKEN"]!};",
       "Content-Type": "application/x-www-form-urlencoded",
     }, body: {
       "j_username": user,
@@ -152,14 +146,8 @@ class Canteen {
   /// Builder pro GET request
   Future<String> _getRequest(String path) async {
     var r = await http.get(Uri.parse(url + path), headers: {
-      "Cookie": "JSESSIONID=" +
-          cookies["JSESSIONID"]! +
-          "; " +
-          "XSRF-TOKEN=" +
-          cookies["XSRF-TOKEN"]! +
-          (cookies.containsKey("remember-me")
-              ? "; " + cookies["remember-me"]! + ";"
-              : ";"),
+      "Cookie":
+          "JSESSIONID=${cookies["JSESSIONID"]!}; XSRF-TOKEN=${cookies["XSRF-TOKEN"]!}${cookies.containsKey("remember-me") ? "; ${cookies["remember-me"]!};" : ";"}",
     });
 
     if (r.statusCode != 200 ||
@@ -271,7 +259,7 @@ class Canteen {
     String res;
     try {
       res = await _getRequest(
-          "/faces/secured/main.jsp?day=${den.year}-${(den.month < 10) ? "0" + den.month.toString() : den.month}-${(den.day < 10) ? "0" + den.day.toString() : den.day}&terminal=false&printer=false&keyboard=false");
+          "/faces/secured/main.jsp?day=${den.year}-${(den.month < 10) ? "0${den.month}" : den.month}-${(den.day < 10) ? "0${den.day}" : den.day}&terminal=false&printer=false&keyboard=false");
     } catch (e) {
       return Future.error(e);
     }
@@ -281,10 +269,11 @@ class Canteen {
         .group(0)
         .toString());
     var jidla = <Jidlo>[];
-    var jidelnicek =
-        RegExp(r'(?<=<div class="jidWrapLeft">).+?((fa-clock))', dotAll: true)
-            .allMatches(res)
-            .toList();
+    var jidelnicek = RegExp(
+            r'(?<=<div class="jidWrapLeft">).+?((fa-clock)|(fa-ban))',
+            dotAll: true)
+        .allMatches(res)
+        .toList();
     for (var obed in jidelnicek) {
       // formátování do třídy
       var o = obed
@@ -297,7 +286,7 @@ class Canteen {
           o.contains("nelze změnit"));
 
       var cenaMatch =
-          RegExp(r'(?<=Cena objednaného jídla">).+?(?=&)').firstMatch(o);
+          RegExp(r'((?<=Cena objednaného jídla">).+?(?=&))').firstMatch(o);
       cenaMatch ??=
           RegExp(r'(?<=Cena při objednání jídla:&nbsp;).+?(?=&)').firstMatch(o);
       cenaMatch ??=
@@ -311,7 +300,12 @@ class Canteen {
               .group(1)
               .toString()
               .replaceAll(' ,', ",")
-              .replaceAll(" <br>", "");
+              .replaceAll(" <br>", "")
+              .replaceAll("\n", "");
+      var alergeny =
+          RegExp(r"""<span title=".+?" class="textGrey">([a-zA-Z]*)<\/span>""")
+              .allMatches(jidlaProDen)
+              .toList();
       var vydejna = RegExp(
               r'(?<=<span class="smallBoldTitle button-link-align">).+?(?=<)')
           .firstMatch(o)!
@@ -329,25 +323,28 @@ class Canteen {
       } else {
         // jinak nastavíme URL pro burzu
         var match = RegExp(
-                r"(?<=ajaxOrder\(this, ')(.+?)(?=').+?((do burzy)|(z burzy))")
+                r"""db\/dbProcessOrder\.jsp.+?type=((plusburza)|(minusburza)).+?(?=')""")
             .firstMatch(o);
         if (match != null) {
           burzaUrl = match.group(1)!.replaceAll("amp;", "");
         }
       }
 
-      jidla.add(Jidlo(
-          nazev: jidlaProDen.replaceAll(
-              r' (?=[^a-zA-ZěščřžýáíéĚŠČŘŽÝÁÍÉŤŇťň])', ''),
-          objednano: objednano,
-          varianta: vydejna,
-          lzeObjednat: lzeObjednat,
-          cena: cena,
-          orderUrl: orderUrl,
-          den: obedDen,
-          burzaUrl: burzaUrl,
-          naBurze:
-              (burzaUrl == null) ? false : !burzaUrl.contains("plusburza")));
+      jidla.add(
+        Jidlo(
+            nazev: jidlaProDen.replaceAll(
+                r' (?=[^a-zA-ZěščřžýáíéĚŠČŘŽÝÁÍÉŤŇťň])', ''),
+            objednano: objednano,
+            varianta: vydejna,
+            lzeObjednat: lzeObjednat,
+            cena: cena,
+            orderUrl: orderUrl,
+            den: obedDen,
+            burzaUrl: burzaUrl,
+            naBurze:
+                (burzaUrl == null) ? false : !burzaUrl.contains("plusburza"),
+            alergeny: [...alergeny.map((e) => e.group(1).toString())]),
+      );
       // KONEC formátování do třídy
     }
 
@@ -372,7 +369,7 @@ class Canteen {
     }
 
     try {
-      await _getRequest("/faces/secured/" + j.orderUrl!); // provést operaci
+      await _getRequest("/faces/secured/${j.orderUrl!}"); // provést operaci
     } catch (e) {
       return Future.error(e);
     }
@@ -405,7 +402,7 @@ class Canteen {
     }
 
     try {
-      await _getRequest("/faces/secured/" + j.burzaUrl!); // provést operaci
+      await _getRequest("/faces/secured/${j.burzaUrl!}"); // provést operaci
     } catch (e) {
       return Future.error(e);
     }
@@ -487,7 +484,7 @@ class Canteen {
   Future<bool> objednatZBurzy(Burza b) async {
     if (!prihlasen) return Future.error("Uživatel není přihlášen");
     try {
-      await _getRequest("/faces/secured/" + b.url!);
+      await _getRequest("/faces/secured/${b.url!}");
     } catch (e) {
       return Future.error(e.toString());
     }
