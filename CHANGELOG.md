@@ -1,3 +1,7 @@
+## 1.1.0-alpha.1
+- Experimentální podpora pro SPŠEI Ostrava
+- Hezčí kód
+- Alergeny
 ## 1.0.1
 - změnit získávání názvu jídla
 ## 1.0.0
