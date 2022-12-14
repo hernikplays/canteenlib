@@ -1,3 +1,5 @@
+## 1.1.1
+- Opravit problém s burzou
 ## 1.1.0-alpha.1
 - Experimentální podpora pro SPŠEI Ostrava
 - Hezčí kód

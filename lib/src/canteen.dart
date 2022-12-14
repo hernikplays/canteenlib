@@ -326,7 +326,7 @@ class Canteen {
                 r"""db\/dbProcessOrder\.jsp.+?type=((plusburza)|(minusburza)).+?(?=')""")
             .firstMatch(o);
         if (match != null) {
-          burzaUrl = match.group(1)!.replaceAll("amp;", "");
+          burzaUrl = match.group(0)!.replaceAll("amp;", "");
         }
       }
 
