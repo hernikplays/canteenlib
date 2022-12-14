@@ -21,6 +21,11 @@ class Jidlo {
   /// Den, který je jídlo vydáváno
   DateTime den;
 
+  /// Seznam alergenů
+  ///
+  /// Pokud se žádný nepodařilo najít, vrací prázdný seznam
+  List<String> alergeny;
+
   /// URL pro požadavek na objednání jídla
   final String? orderUrl;
 
@@ -31,6 +36,7 @@ class Jidlo {
       required this.objednano,
       required this.varianta,
       required this.den,
+      this.alergeny = const [],
       this.cena,
       required this.lzeObjednat,
       this.orderUrl,
