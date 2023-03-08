@@ -12,7 +12,7 @@ Experimentální **neoficiální** webscrape knihovna pro komunikaci se systéme
 ## To do
 - Kompatibilita se staršími verzemi iCanteen
 
-*\* Knihovna nemusí fungovat na všech instancích systému iCanteen, proto žádám každého, kdo může a je uživatelem iCanteen, aby otestoval funkčnost této knihovny a případné problémy [nahlásil](https://github.com/hernikplays/canteenlib/issues)*
+*\* Knihovna nemusí fungovat na všech instancích systému iCanteen, proto žádám každého, kdo může a je uživatelem iCanteen, aby otestoval funkčnost této knihovny a případné problémy [nahlásil](https://git.mnau.xyz/hernik/canteenlib/issues/new)*
 
 ### Otestované instance iCanteen
-[zde](https://github.com/hernikplays/canteenlib/blob/main/COMPATIBILITY.md)
+[zde](https://git.mnau.xyz/hernik/canteenlib/src/branch/main/COMPATIBILITY.md)
