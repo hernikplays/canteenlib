@@ -303,7 +303,7 @@ class Canteen {
               .replaceAll(" <br>", "")
               .replaceAll("\n", "");
       var alergeny =
-          RegExp(r"""<span title=".+?" class="textGrey">([a-zA-Z]*)<\/span>""")
+          RegExp(r"""<span title=".+?" class="textGrey">(.+?)<\/span>""")
               .allMatches(jidlaProDen)
               .toList();
       var vydejna = RegExp(
