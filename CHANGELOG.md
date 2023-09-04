@@ -1,3 +1,5 @@
+## 1.1.2
+- Opravit negativní čísla v kreditu, účet pro platby by @tpkowastaken in https://github.com/hernikplays/canteenlib/pull/4
 ## 1.1.1
 - Opravit problém s burzou
 ## 1.1.0-alpha.1
