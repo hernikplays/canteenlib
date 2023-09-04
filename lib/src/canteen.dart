@@ -48,17 +48,19 @@ class Canteen {
       prihlasen = false;
       return Future.error("Uživatel není přihlášen");
     }
-    var m = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
+    var kreditMatch = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
         .firstMatch(r)!
         .group(1)!
         .replaceAll(",", ".")
-        .replaceAll(RegExp(r"[^\w.]"), ""));
+        .replaceAll(RegExp(r"[^\w.-]"), ""));
     var jmenoMatch = RegExp(r'(?<=jméno: <b>).+?(?=<\/b)').firstMatch(r);
     var prijmeniMatch = RegExp(r'(?<=příjmení: <b>).+?(?=<\/b)').firstMatch(r);
     var kategorieMatch =
         RegExp(r'(?<=kategorie: <b>).+?(?=<\/b)').firstMatch(r);
-    var ucetMatch = RegExp(r'(?<=účet pro platby do jídelny: <b>).+?(?=<\/b)')
-        .firstMatch(r);
+    var ucetMatch = RegExp(r'účet pro platby do jídelny:\s*<b>(\d+/\d+)</b>')
+        .firstMatch(r)
+        ?.group(1)
+        ?.replaceAll(RegExp(r'<\/?b>'), '');//odstranit html tag <b>
     var varMatch =
         RegExp(r'(?<=variabilní symbol: <b>).+?(?=<\/b)').firstMatch(r);
     var specMatch =
@@ -67,9 +69,10 @@ class Canteen {
     var jmeno = jmenoMatch?.group(0) ?? "";
     var prijmeni = prijmeniMatch?.group(0) ?? "";
     var kategorie = kategorieMatch?.group(0) ?? "";
-    var ucet = ucetMatch?.group(0) ?? "";
+    var ucet = ucetMatch ?? "";
     var varSymbol = varMatch?.group(0) ?? "";
     var specSymbol = specMatch?.group(0) ?? "";
+    var kredit = kreditMatch ?? 0.0;
 
     return Uzivatel(
         jmeno: jmeno,
@@ -78,7 +81,7 @@ class Canteen {
         ucetProPlatby: ucet,
         varSymbol: varSymbol,
         specSymbol: specSymbol,
-        kredit: m ?? 0.0);
+        kredit: kredit);
   }
 
   Future<void> _getFirstSession() async {
