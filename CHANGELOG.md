@@ -1,3 +1,7 @@
+## 1.1.4
+- Opravit info o stavu na burze
+## 1.1.3
+- Opravit hledání burza URL u jídelen, kde je tlačítko ve tvaru `X ks do burzy`
 ## 1.1.2
 - Opravit negativní čísla v kreditu, účet pro platby by @tpkowastaken in https://github.com/hernikplays/canteenlib/pull/4
 ## 1.1.1

@@ -48,11 +48,12 @@ class Canteen {
       prihlasen = false;
       return Future.error("Uživatel není přihlášen");
     }
-    var kreditMatch = double.tryParse(RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
-        .firstMatch(r)!
-        .group(1)!
-        .replaceAll(",", ".")
-        .replaceAll(RegExp(r"[^\w.-]"), ""));
+    var kreditMatch = double.tryParse(
+        RegExp(r' +<span id="Kredit" .+?>(.+?)(?=&)')
+            .firstMatch(r)!
+            .group(1)!
+            .replaceAll(",", ".")
+            .replaceAll(RegExp(r"[^\w.-]"), ""));
     var jmenoMatch = RegExp(r'(?<=jméno: <b>).+?(?=<\/b)').firstMatch(r);
     var prijmeniMatch = RegExp(r'(?<=příjmení: <b>).+?(?=<\/b)').firstMatch(r);
     var kategorieMatch =
@@ -60,7 +61,7 @@ class Canteen {
     var ucetMatch = RegExp(r'účet pro platby do jídelny:\s*<b>(\d+/\d+)</b>')
         .firstMatch(r)
         ?.group(1)
-        ?.replaceAll(RegExp(r'<\/?b>'), '');//odstranit html tag <b>
+        ?.replaceAll(RegExp(r'<\/?b>'), ''); //odstranit html tag <b>
     var varMatch =
         RegExp(r'(?<=variabilní symbol: <b>).+?(?=<\/b)').firstMatch(r);
     var specMatch =
@@ -326,7 +327,7 @@ class Canteen {
       } else {
         // jinak nastavíme URL pro burzu
         var match = RegExp(
-                r"""db\/dbProcessOrder\.jsp.+?type=((plusburza)|(minusburza)).+?(?=')""")
+                r"""db\/dbProcessOrder\.jsp.+?type=((plusburza)|(minusburza)|(multiburza)).+?(?=')""")
             .firstMatch(o);
         if (match != null) {
           burzaUrl = match.group(0)!.replaceAll("amp;", "");
@@ -345,7 +346,7 @@ class Canteen {
             den: obedDen,
             burzaUrl: burzaUrl,
             naBurze:
-                (burzaUrl == null) ? false : !burzaUrl.contains("plusburza"),
+                (burzaUrl == null) ? false : burzaUrl.contains("minusburza"),
             alergeny: [...alergeny.map((e) => e.group(1).toString())]),
       );
       // KONEC formátování do třídy
@@ -394,7 +395,7 @@ class Canteen {
   ///
   /// Výstup:
   /// - Aktualizovaná instance [Jidlo] tohoto jídla NEBO [Future] jako chyba
-  Future<Jidlo> doBurzy(Jidlo j) async {
+  Future<Jidlo> doBurzy(Jidlo j, {int amount = 1}) async {
     if (!prihlasen) {
       return Future.error("Uživatel není přihlášen");
     }
@@ -404,8 +405,13 @@ class Canteen {
           "Jídlo nelze uložit do burzy nebo nemá adresu pro uložení");
     }
 
+    if (amount < 1 && j.burzaUrl!.endsWith("amount=")) {
+      return Future.error("Nemůžeš dát do burzy méně než jeden kus");
+    }
+    var finalUrl =
+        (j.burzaUrl!.endsWith("amount=")) ? "${j.burzaUrl}$amount" : j.burzaUrl;
     try {
-      await _getRequest("/faces/secured/${j.burzaUrl!}"); // provést operaci
+      await _getRequest("/faces/secured/$finalUrl"); // provést operaci
     } catch (e) {
       return Future.error(e);
     }
