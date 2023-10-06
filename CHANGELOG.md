@@ -1,3 +1,7 @@
+## 2.0.0
+- Alergeny jsou nyní ve tříde `Alergen`
+- Opravena chyba, kdy se HTML alergenů propisovalo do názvu jídla
+
 ## 1.1.4
 - Opravit info o stavu na burze
 ## 1.1.3

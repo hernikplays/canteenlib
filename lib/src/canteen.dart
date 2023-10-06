@@ -306,10 +306,21 @@ class Canteen {
               .replaceAll(' ,', ",")
               .replaceAll(" <br>", "")
               .replaceAll("\n", "");
-      var alergeny =
-          RegExp(r"""<span title=".+?" class="textGrey">(.+?)<\/span>""")
+      var alergenyList =
+          RegExp(r"""<span(?: |\n).+?title="(.+?)".+?>(\d{1,2})""")
               .allMatches(jidlaProDen)
               .toList();
+
+      var alergeny = alergenyList.map<Alergen>((e) {
+        var jmeno = RegExp(r'<b>(.+?)<\/b>')
+            .firstMatch(e.group(1).toString())!
+            .group(1);
+        var popis =
+            RegExp(r'<\/b> - (.+)').firstMatch(e.group(1).toString())?.group(1);
+        var kod = int.parse(e.group(2).toString());
+        return Alergen(nazev: jmeno!, kod: kod, popis: popis);
+      }).toList();
+
       var vydejna = RegExp(
               r'(?<=<span class="smallBoldTitle button-link-align">).+?(?=<)')
           .firstMatch(o)!
@@ -333,10 +344,13 @@ class Canteen {
           burzaUrl = match.group(0)!.replaceAll("amp;", "");
         }
       }
-
+      var jidloJmeno = RegExp(r'(.+?)(?=<sub>)')
+          .firstMatch(jidlaProDen)!
+          .group(1)
+          .toString();
       jidla.add(
         Jidlo(
-            nazev: jidlaProDen.replaceAll(
+            nazev: jidloJmeno.replaceAll(
                 r' (?=[^a-zA-ZěščřžýáíéĚŠČŘŽÝÁÍÉŤŇťň])', ''),
             objednano: objednano,
             varianta: vydejna,
@@ -347,7 +361,7 @@ class Canteen {
             burzaUrl: burzaUrl,
             naBurze:
                 (burzaUrl == null) ? false : burzaUrl.contains("minusburza"),
-            alergeny: [...alergeny.map((e) => e.group(1).toString())]),
+            alergeny: alergeny),
       );
       // KONEC formátování do třídy
     }

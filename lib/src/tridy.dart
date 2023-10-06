@@ -24,7 +24,7 @@ class Jidlo {
   /// Seznam alergenů
   ///
   /// Pokud se žádný nepodařilo najít, vrací prázdný seznam
-  List<String> alergeny;
+  List<Alergen> alergeny;
 
   /// URL pro požadavek na objednání jídla
   final String? orderUrl;
@@ -42,6 +42,15 @@ class Jidlo {
       this.orderUrl,
       this.burzaUrl,
       required this.naBurze});
+}
+
+/// Popisuje alergen v jídelníčku
+class Alergen {
+  final int kod;
+  final String nazev;
+  final String? popis;
+
+  const Alergen({required this.nazev, required this.kod, this.popis});
 }
 
 /// Reprezentuje cizí jídlo na burze
