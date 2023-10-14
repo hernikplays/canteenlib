@@ -1,5 +1,5 @@
 ## INFO
-__Knihovna již není aktivně vyvíjena a jsou vydávány pouze rychlé opravy, když je potřebuji. Pokud někdo chcete moji hroznou práci přebrat nebo chcete zde mít odkaz na vaši vlastní implementaci, dejte mi vědět.__
+__Tato verze knihovny není dále vyvíjena. Vývoj teď probíhá na https://github.com/tpkowastaken/canteenlib__
 
 ## O knihovně
 Experimentální **neoficiální** webscrape knihovna pro komunikaci se systémem [iCanteen](https://www.z-ware.cz/internetove-objednavky). **Knihovna je aktuálně nestabilní! Používejte na vlastní riziko!**
